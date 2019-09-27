@@ -211,8 +211,8 @@ class PGLogger(bdb.Bdb):
         
         user_builtins = collections.OrderedDict()
         for (k,v) in __builtins__.iteritems():
-            print(k)
-            print(v)
+            # print(k)
+            # print(v)
             user_builtins[k] = v
         
         #StringIO  는 파일처럼 흉내내는 객체 -> 문자열 데이터를 파일로 저장한다음 처리
@@ -293,7 +293,7 @@ def exec_file_and_pretty_print(mainpyfile):
     import pprint
 
     if not os.path.exists(mainpyfile):
-        print 'Error:', mainpyfile, 'does not exist'
+        print ('Error:', mainpyfile, 'does not exist')
         sys.exit(1)
 
     def pretty_print(output_lst):

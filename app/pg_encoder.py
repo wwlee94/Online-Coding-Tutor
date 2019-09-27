@@ -24,6 +24,7 @@ import re, types
 # 정규 표현식 뽑아내기
 typeRe = re.compile("<type '(.*)'>")
 functionRe = re.compile("<function '(.*)'>")
+moduleRe = re.compile("<module '(.*)'>")
 #classRe = re.compile("<class '(.*)'>")
 
 def encode(data, ignore_id=False):
@@ -83,7 +84,7 @@ def encode(data, ignore_id=False):
                 for (k,v) in data.iteritems():
                     #locals 값은 띄우지 않는다?
                     if k not in ('__module__','__return__'): 
-                        ret.append([encode_helper(k,new_compound_obj_ids),encode_helper(v,new_compound_obj_ids)])                
+                        ret.append([encode_helper(k,new_compound_obj_ids),encode_helper(v,new_compound_obj_ids)])              
             else:
                 #함수같은 것들
                 typeStr = str(dataType)
@@ -91,7 +92,10 @@ def encode(data, ignore_id=False):
                 
                 if not m:
                     m = functionRe.match(typeStr)
-#                 assert m,dataType
+                    # if not m:
+                    #     m = moduleRe.match(typeStr)
+                       
+                #assert m,dataType
                 #m.group() -> <type 'function'>
                 ret = [m.group(1),my_small_id,str(data)]
             '''
@@ -119,15 +123,15 @@ if __name__=='__main__':
             import sys
             #라인 번호 가져옴 -> test() 함수가 불린 라인 위치
             linenum = sys._getframe(1).f_lineno
-            print "actual : %s, expected : %s " % (str(actual),str(expected)) 
+            print ("actual : %s, expected : %s " % (str(actual),str(expected)))
             if(actual == expected):
                 msg = "Test on line %s success" % linenum
             else:
                 msg = "Test oon line %s fail Expected '%s', but got '%s'." % (linenum,expected,actual)
-            print msg
+            print (msg)
         
         #Primitive Type들은 인자 타입을 확인한 뒤 넣은 그대로 반환함!
-        print "Primitive Type 테스트!!"
+        print ("Primitive Type 테스트!!")
         test(encode("hello"),"hello")
         test(encode(123),123)
         test(encode(123.45),123.45)
@@ -136,15 +140,15 @@ if __name__=='__main__':
         test(encode(None),None)
         
         #튜플 테스트
-        print "TUPLE 테스트 !!"
+        print ("TUPLE 테스트 !!")
         test(encode(((1,2),(2,3))),['TUPLE',1,['TUPLE', 2, 1, 2], ['TUPLE', 3, 2, 3]])
         
         #DICT 테스트
-        print "DICT 테스트 !!"
+        print ("DICT 테스트 !!")
         test(encode({1:'mon'}), ['DICT', 4 , [1, 'mon']])
         
         #함수 테스트
-        print "Method 테스트 !!"
+        print ("Method 테스트 !!")
         test(encode(test),['function',5,'test'])
         #더 테스트 해야함
         #range(1,3) 의 반환값 (1,2) 가 나와서 LIST로 나옴

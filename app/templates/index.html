@@ -256,6 +256,8 @@
       var color_list = ["lightblue","#4CAE4C" ,"#F0AD4E" , "pink", "#5BC0DE", "lightcoral"]
       //color index
       var color_index = 0
+      //DICT 타입인지 아닌지
+      var isDictType = false
 
       /* 코드미러 설정 부분 */
       var editor = document.getElementById('editor');
@@ -885,7 +887,7 @@
           }
         }
 
-        //go.js 기본 설정
+        //go.js 기본 설정 ############다른파일로*############다른파일로*############다른파일로*############다른파일로*############다른파일로*
         function init() {
 
           // 노드 디자인 + 기능
@@ -907,7 +909,7 @@
               $$(go.TextBlock, {
                   font: "bold 14px sans-serif",
                   stroke: 'black',
-                  margin: 6, // make some extra space for the shape around the text
+                  margin: 5, // make some extra space for the shape around the text
                   isMultiline: false, // don't allow newlines in text
                   // TextBlock.text is bound to Node.data.key
                 },
@@ -994,12 +996,69 @@
                   )
                 );
             
+                // DICT 타입 template
+                var dictGroupTemplate =
+                $$(go.Group, "Vertical",{
+                     avoidable: false,
+                     layerName: "Background"
+                 },
+                   $$(go.GridLayout, { 
+                        alignment: go.GridLayout.Center,
+                        wrappingColumn: 1,
+                        cellSize: new go.Size(1, 1),
+                        spacing: new go.Size(1, 1)
+                    }),
+                       $$(go.TextBlock,
+                    {
+                      font: "bold 14px sans-serif",
+                      alignment: go.Spot.Left,
+                    },
+                    new go.Binding("text", "text").makeTwoWay(),
+                    new go.Binding("stroke", "color")),
+                     $$(go.Panel, "Auto",
+                        { name: "PANEL",
+                        },
+                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
+                      {
+                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 3,
+//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
+                      }),
+                    $$(go.Placeholder, { margin: 10, background: "transparent" })  // represents where the members are 
+                  )
+                );
+            
+                // DICT 타입 sub틀 template
+                var subdictGroupTemplate =
+                $$(go.Group, "Vertical",{
+                     avoidable: false,
+                     layerName: "Background"
+                 },
+                   $$(go.GridLayout, { 
+                        alignment: go.GridLayout.Center,
+//                         wrappingColumn: Infinity,
+                        cellSize: new go.Size(1, 1),
+                        spacing: new go.Size(1, 1)
+                    }),
+                     $$(go.Panel, "Auto",
+                        { name: "PANEL",
+                          margin: new go.Margin(5, 0, 0, 0),
+                        },
+                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
+                      {
+                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 2,
+//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
+                      }),
+                    $$(go.Placeholder, { margin: 5, background: "transparent" })  // represents where the members are 
+                  )
+                );
             
                //템플릿 맵 설정
-               var templmap = new go.Map(); 
+               var templmap = new go.Map();  
 
               templmap.add("", globalGroupTemplate);
               templmap.add("object", objectGroupTemplate);
+              templmap.add("dict", dictGroupTemplate);
+              templmap.add("subdict", subdictGroupTemplate);
               // for the default category, "", use the same template that Diagrams use by default;
 
               myDiagram.groupTemplateMap = templmap;
@@ -1015,24 +1074,25 @@
           linkDataArray = [];
           // 색상 초기화
           color_index = 0;
-            
-          //frames 생성
-          dict = {};
-          dict["key"] = "프레임";
-          dict["text"] = "프레임";
-          dict["color"] = "black";
-          dict["isGroup"] = true;
-          nodeDataArray.push(dict);
-            
-          //global frame 생성
-          dict = {}
-          dict["key"] = "전역변수";
-          dict["text"] = "전역변수";
-          dict["color"] = "black";
-          dict["isGroup"] = true;
-          dict["group"] = "프레임";
-          nodeDataArray.push(dict);
-
+          
+          if(global_order.length != 0 && global_order.length != undefined){
+              //frames 생성
+              dict = {};
+              dict["key"] = "프레임";
+              dict["text"] = "프레임";
+              dict["color"] = "black";
+              dict["isGroup"] = true;
+              nodeDataArray.push(dict);
+                
+              //global frame 생성
+              dict = {}
+              dict["key"] = "전역변수";
+              dict["text"] = "전역변수";
+              dict["color"] = "black";
+              dict["isGroup"] = true;
+              dict["group"] = "프레임";
+              nodeDataArray.push(dict);
+          }
           // 임시 globalNode
           tempGlobalNode = [];
           // 임시 objectNode
@@ -1218,8 +1278,6 @@
 //             tempGlobalNode = [];
             // 임시 objectNode 
             tempObjectNode = [];
-            //스택 주소
-            object_ref = [];
             
             //함수 이름
             for(var i=0;i<stack_locals.length;i++){
@@ -1262,7 +1320,7 @@
                               nodeDataArray.push(stack_global);
                           }
                           else{
-                              //스택 변수 x
+                              //스택 변수 h
                               stack_global = {}
                               stack_global["key"] = "stack_"+key;
                               stack_global["text"] = key;
@@ -1271,7 +1329,7 @@
                               color_index ++;
                               nodeDataArray.push(stack_global);
                       
-                              //스택 객체-> 변수 x가 가르키는 주소
+                              //스택 객체-> 변수 h가 가르키는 주소
                               stack_object = {}
                               stack_object["key"] = ""+value[1]
                               // 내부 데이터는 아래에서 
@@ -1289,7 +1347,6 @@
                                   //recursive draw
                                   // 전체 globals data , key의 주소
                                   //재귀로 반복하면서 전역 객체 생성
-                                  //컬러 반복 칠하기 위함
                                   decode_type(value, "스택", true);
                      
                               }//if
@@ -1341,8 +1398,8 @@
                            code = cm_editor.getLine(def_line - 1);
                            code = code.replace('def ',"");
                            code = code.replace(':',"");
-                           code = code.replace('/\s/gi',"")
-
+                           code = code.replace(/(\s*)/g,"")
+                           
                            dict = {}
                            dict[func_name] = code
                            stack_parameter.push(dict);
@@ -1359,7 +1416,7 @@
         // state = false -> recursive로 생성된 객체
         // object -> object 링크
         function decode_type(data,group_key, state){
-
+            
             // 프리미티브이면 생성
             if(isPrimitive(data)){
                 //python에선 null -> None으로 표현
@@ -1368,19 +1425,15 @@
                 subObject = {}
                 subObject["key"] = "data_"+group_key+"_"+data;
                 subObject["text"] = ""+data;
-                subObject["color"] = color_list[color_index % color_list.length];
+                subObject["color"] = color_list[color_index++ % color_list.length];
                 subObject["group"] = ""+group_key;
-                color_index ++;
                 tempObjectNode.push(subObject);
                 return;
             }
             else{
-                
                 // data[0] -> 타입 | data[1] -> 주소
-                
                 //포인터 객체
                 tmpObject = {};
-//                 tmpObject["key"] = "p"+Math.floor(Math.random() * 100000) + 1000;
                 tmpObject["key"] = "p_"+group_key+"_"+data[1];
                 
                 //포인터 받는 객체
@@ -1388,7 +1441,7 @@
                 subObject["key"] = ""+data[1];
                
                 //포인터-> 객체로 링크 연결해줌 -> state=true 인경우 -> decode_type() 첫 선언시 -> 링크 안검 -> 객체 생성만
-                if(state==false){
+                if(!state){
                     tmpObject["text"] = "*";
                     tmpObject["color"] = color_list[color_index % color_list.length];
                     tmpObject["group"] = ""+group_key;
@@ -1400,7 +1453,7 @@
                     link["to"] = subObject["key"];
                     linkDataArray.push(link);
                 }
-                
+
                 //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만 
                 if (!object_ref.includes(subObject["key"])){
                       object_ref.push(subObject["key"]);
@@ -1410,7 +1463,8 @@
                 subObject["text"] = ""+data[0];
                 subObject["group"] = "객체";
                 subObject["isGroup"] = true
-                subObject["category"] = "object";
+                if(data[0] != "DICT") subObject["category"] = "object";
+                else subObject["category"] = "dict";
                 tempObjectNode.push(subObject);
                 
                 //2. 해당 object 값안에서 재귀로 계속 object 생성
@@ -1422,14 +1476,40 @@
                             decode_type(value, data[1], false);
                         }
                         else if(data[0] == "DICT"){
-                            value = data[index];
-                            decode_type(value, data[1], false);
+                            key = data[index][0]
+                            value = data[index][1]
+                            
+                            dict = {};
+                            dict["key"] = "dict_"+ group_key +"_"+ key +":"+value;
+                            dict["color"] = "black"
+                            dict["group"] = data[1];
+                            dict["isGroup"] = true;
+                            dict["category"] = "subdict";
+                            tempObjectNode.push(dict);
+                            
+                            if(isPrimitive(value)){
+                                //python에선 null -> None으로 표현
+                                if(typeof(value)===typeof("")) value = "'"+value+"'";
+                                if(value == null) value="None";
+                                subObject = {}
+                                subObject["key"] = "data_"+group_key+"_"+value;
+                                subObject["text"] = "'"+key +"' : "+ value;
+                                subObject["color"] = color_list[color_index % color_list.length];
+                                subObject["group"] = dict["key"];
+                                tempObjectNode.push(subObject);
+                                return;
+                            }
+                            else{
+                                decode_type(key, dict["key"], true); //key는 compound type이 될수 없으니 
+                                decode_type(value, dict["key"], false);
+                            }
                         }
                         //함수 일때
                         else{
                             isFind = false;
-                            // <function func ........> 중 func 를 가져오는 과정
+                            // <function func ........> 중 func 를 가져오는 과정 -> import들은 '' 달고옴
                             func_name = data[2].split(' ')[1]
+                            if(data[0] == "module") {func_name = func_name.match(/\'{1}(.*){1}\'{1}/)[1]} ////////불안하다잉    
                             //next_button  클릭시 getStackLocalsParameter 로 저장된 parameter list
                             for(var i=0;i<stack_parameter.length;i++){ 
                                 //key -> global['key'] -> 함수이름

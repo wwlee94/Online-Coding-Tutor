@@ -5,7 +5,7 @@ sys.setdefaultencoding('utf-8')
 
 import os
 import re
-from flask import Flask, render_template, session , request, redirect, url_for
+from flask import Flask , render_template, session , request, redirect, url_for
 from flask_socketio import SocketIO, emit
 import datetime
 app = Flask(__name__) 
@@ -13,7 +13,6 @@ app.secret_key = "secret"
 # app.config.update(
 #     PERMANENT_SESSION_LIFETIME = 5)
 socketio = SocketIO(app)
-
 #visualize code to json
 import pg_logger
 import json
@@ -61,8 +60,8 @@ def before_request():
 def index():
     if request.method == 'POST':
         data = request.form # {url:url,data: data} -> data를 가져온것
-        print data['bno']
-        print data['content']
+        print(data['bno'])
+        print(data['content'])
         return render_template('index.html',content = data['content'])
     else:
         return render_template('index.html',content = "false")
@@ -100,13 +99,13 @@ def example():
             mtime = mtime.ctime()           
             file_list_py.append({'file':file,'info':info,'size':size,
                               'mtime':mtime,'content':content}) 
-    print file_list_py
+    print (file_list_py)
     return render_template('example.html',file_list_py = file_list_py)
 
 @socketio.on('connect') 
 def connect(): 
     emit("after connect", {'data': 'Connected'})
-    print "Connect !!"
+    print("Connect !!")
 
 #사용자가 브라우저를 종료하면 시간 지나서 disconnect -> 세션도 비움 -> 해당 세션id의 파일도 삭제
 @socketio.on('disconnect') 
@@ -115,16 +114,16 @@ def disconnect():
     if os.path.isfile(filepath):
         os.remove(filepath)
         
-    print session['username']+" Session Clear !!"
+    print (session['username']+" Session Clear !!")
     session.clear()    
-    print "Disconnected !!" 
+    print ("Disconnected !!") 
 
 #stop 버튼 클릭시
 @socketio.on('stop_request')
 def stop(message):
     session['debug_str']=[]
-    print "Session['debug_str'] Clear !!"
-    print message['data']    
+    print ("Session['debug_str'] Clear !!")
+    print (message['data'])    
 
 #viz_request -> visualize 버튼 클릭시 요청 -> 내부 정보를 json으로 반환
 @socketio.on('viz_request') 
@@ -132,9 +131,9 @@ def vizualize_request(message):
     string = message['data'] #unicode로 받아짐..!!!! 중요!!   
     string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로.. 
     python_v = check_version(message['version'])     
-    print string
-    print python_v
-    print "viz_request : python compile !!"
+    print (string)
+    print (python_v)
+    print ("viz_request : python compile !!")
     try:
         if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
             os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
@@ -153,14 +152,14 @@ def vizualize_request(message):
     #data = fd_popen.read().strip()
     #fd_popen.close()
     out , err = fd_popen.communicate()
-    print out
-    print "visualize data"
+    print (out)
+    print ("visualize data")
     if err == "":
         viz_data = execute_return_json(cmd[1])
-        print viz_data        
+        print (viz_data)        
         emit("viz_response", {'data': viz_data})        
     elif err != "":        
-        print err
+        print (err)
         emit("viz_response", {'data': err})
 
 #run_request -> Run 버튼 클릭시 .py 컴파일 후 결과값 리턴
@@ -169,7 +168,7 @@ def run_request(message):
     string = message['data'] #unicode로 받아짐..!!!! 중요!!   
     string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..    
     python_v = check_version(message['version'])
-    print "run_request : python compile !!"
+    print ("run_request : python compile !!")
     try:
         if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
             os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
@@ -189,12 +188,12 @@ def run_request(message):
     #fd_popen.close()
     out , err = fd_popen.communicate()
     if err == "":
-        print out
+        print (out)
         out = out.strip()    
         out = python_version(python_v) + out #sys.version -> python version    
         emit("run_response", {'data': out})    
     elif err != "":        
-        print err
+        print (err)
         emit("run_response", {'data': err})
 
 #debug_request -> Debug버튼 클릭시 서버에서 PDB 실행
@@ -204,8 +203,8 @@ def debug_request(message):
     string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로.. 
     session['debug_str']=[]
     python_v = check_version(message['version']) 
-    print string
-    print "debug_request : python debug !!"
+    print (string)
+    print ("debug_request : python debug !!")
     try:
         if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
             os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
@@ -229,7 +228,7 @@ def debug_request(message):
     line_stack = []  # 현재까지 디버그된 py파일의 라인 정보 스택
     #.py 패턴을 찾아 라인 정보를 가져옴
     findall = p.findall(out)
-    print findall
+    print (findall)
     for e in findall:
         string = p_num.search(e)
         line_stack.append(string.group())
@@ -240,10 +239,10 @@ def debug_request(message):
     
     if out != "":        
         out = python_version(python_v) + out #sys.version -> python version
-        print out
+        print (out)
         emit("debug_response", {'success': out, 'linenum':linenum })        
     if err != "":
-        print err
+        print (err)
         emit("debug_response", {'fail': err})
 
 #Debug 버튼 클릭 이후 PDB 커맨드 입력창에 커맨드 입력시 -> 입력큐를 만들어 PDB출력값 반환
@@ -254,8 +253,8 @@ def debug_input_request(message):
     session_clear = False    
     python_v = check_version(message['version'])
     session['debug_str'].append(str(message['data']))    
-    print message['data']
-    print "debug_input_request : python debug_input !!"
+    print (message['data'])
+    print ("debug_input_request : python debug_input !!")
     # #세션  출력 (테스트)
     # for i in session:
     #     if i == 'debug_str':  #session['debug_str'] 인 것만 빼냄
@@ -274,7 +273,7 @@ def debug_input_request(message):
     for i in session:
         if i == 'debug_str':
             for s in session[i]:
-                print s                
+                print (s)                
                 inst_stack.append(s+"\n")     #명령어 스택에 입력한 문자열 추가
     fd_popen.stdin.writelines(inst_stack)     #pdb subprocess에 입력값 주기!
     
@@ -282,7 +281,7 @@ def debug_input_request(message):
     
     if message['data'] == 'q' or message['data']=='quit':
         session_clear = True
-        print "Session['debug_str'] Clear !!"
+        print ("Session['debug_str'] Clear !!")
         result_out = result_out + "PDB DEBUGGER Exit!!"
         
     if result_out != "":
@@ -292,14 +291,14 @@ def debug_input_request(message):
         #(Pdb) 뒤에 줄바꿈 추가하기위함
         result_out = pdb_line_break(result_out,session['debug_str'])
         result_out = result_out.strip()      #첫번째,마지막 줄바꿈 없앰
-        print result_out
+        print (result_out)
         
         #진행 상태가 finished된 상태인지 검사
         finish_state = check_pdb_finished(result_out)
         
         #.py 패턴을 찾아 라인 정보를 가져옴
         findall = p.findall(result_out)
-        print findall
+        print (findall)
         for e in findall:
             string = p_num.search(e)
             line_stack.append(string.group())
