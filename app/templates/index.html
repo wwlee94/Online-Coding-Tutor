@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SourceCode Visualizer</title>
+  <!-- loading css -->
+  <link rel="stylesheet" href="static/css/stairsloader.css">
+  <link rel="stylesheet" href="static/css/bluespinnerloader.css">
+
+  <!-- Codemirror .css-->
+  <link rel="stylesheet" href="static/css/codemirror.css">
+  <link rel="stylesheet" href="static/css/darcula.css">
+  <link rel="stylesheet" href="static/css/simplescrollbars.css">
+  <link rel="stylesheet" href="static/css/show-hint.css">
+
+  <!-- Alertify.js 알림 css -->
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.2/build/css/alertify.min.css" />
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.2/build/css/themes/default.min.css" />
+
+  <!-- 부트스트랩 -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+  <style>
+    /* 코드미러 설정 */
+
+    .CodeMirror {
+      border-top: 1px solid black;
+      border-bottom: 1px solid black;
+    }
+/*     .CodeMirror-gutter {
+      padding: 5px;
+    } */
+    .breakpoints{
+        padding: 10px;
+     }
+    .CodeMirror-linenumber {
+/*         color: #c8d2d7;
+        font-size: 10px; */
+        text-align : center;
+        padding : 0 0 0 0;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: rgb(28, 28, 28);
+      color: #ffffff;
+      margin-top: 5px;
+    }
+
+    /* page-loader , debug-loader css 설정 */
+
+    .h1-debug {
+      font: 2em 'Roboto', sans-serif;
+      margin-bottom: 40px;
+      margin-left: -55px;
+    }
+
+    .debug-loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -100px;
+      margin-left: -10px;
+    }
+
+    .h1-page {
+      font: 2em 'Roboto', sans-serif;
+      margin-left: -50px;
+      margin-bottom: -10px;
+    }
+
+    .page-loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -120px;
+      margin-left: -30px;
+    }
+
+    /* 부트스트랩 버튼 크기 */
+
+    .form-control {
+      position: relative;
+      width: 120px;
+    }
+
+    .btn-fix {
+      width: 80px;
+      margin: 4px;
+    }
+    .btn:focus,.btn:active {
+       outline: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- loading class -->
+  <div class="debug-loader" style="display:none;">
+    <h1 class="h1-debug">Please wait :)</h1>
+    <div id="loading"></div>
+  </div>
+
+  <!-- page loading -->
+  <div class="page-loader" style="display:none;">
+    <h1 class="h1-page">Page Loading ..</h1>
+    <div class="loader">
+      <div class="loader__bar"></div>
+      <div class="loader__bar"></div>
+      <div class="loader__bar"></div>
+      <div class="loader__bar"></div>
+      <div class="loader__bar"></div>
+      <div class="loader__ball"></div>
+    </div>
+  </div>
+
+  <!-- view 시작 -->
+  <div class="container" style="display:none;">
+<!--       <a href="#" id="link" download="sample.json">download</a> -->
+    <div class="row" style="margin-top:15px">
+      <div class="col-md-6" style="min-width:500px">
+        <p>
+          Version
+          <select class="form-control form-control-sm" name="version">
+            <option>python 2.7</option>
+            <option  selected="selected">python 3.6</option>
+        </select>
+        </p>
+        {% if content == 'false'%}
+        <p>
+          <!-- 코드를 수정할 수 있는 코드미러 에디터 view -->
+          <textarea id="editor"># -*- coding:utf-8 -*-&#10;&#10;# 메인함수&#10;if __name__ == '__main__':</textarea>
+        </p>
+        {% else %}
+        <p>
+          <!-- 코드를 수정할 수 있는 코드미러 에디터 view -->
+          <textarea id="editor">{{content}}</textarea>
+        </p>
+        {% endif %}
+
+        <div>
+          <button id="visualize" class="btn btn-primary btn-fix" type="submit">Visualize</button>
+          <button id="run" class="btn btn-success btn-fix" type="submit">Run</button>
+          <button id="debug" class="btn btn-warning btn-fix" type="submit">Debug</button>
+          <button id="stop" class="btn btn-danger btn-fix" type="submit">Stop</button>
+          <button id="example" class="btn btn-info btn-fix" type="submit">Example</button>
+        </div>
+        <br/>
+        <div id="viz_step">
+          <div> <span style="color:#FFFFFF; font-size:x-large"> → </span> <span> 현재 실행된 라인 </span></div>
+          <div> <span style="color:#30A9DE; font-size:x-large"> → </span> <span> 다음에 실행될 라인 </span></div>
+
+          <br/>
+          <br/>
+          
+          <div id="viz_step_view" style="display:none;">
+            <button id="init_button" class="btn btn-primary" type="button">처음</button>&nbsp;
+            <button id="pre_button" class="btn btn-primary" type="button">이전</button>&nbsp;
+              <span>
+              현재 단계 : <span id="current_step" style="font-size:large;"> </span> &nbsp; / &nbsp; 
+              마지막 단계 : <span id="last_step" style="font-size:large;"> </span> &nbsp;
+              </span>
+            <button id="next_button" class="btn btn-primary" type="button">다음</button>&nbsp;
+            <button id="last_button" class="btn btn-primary" type="button">마지막</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6" style="margin-top:10px">
+          
+        <!--  go.js를 이용한 visualizer -->
+        <div id="myDiagramDiv" style="background-color: rgb(240,240,240); border: 1px solid black; width:580px; height:490px ; display:none;"></div>
+        
+        <br/>
+        <!-- 코드의 출력값을 볼수 있는 코드미러 view -->
+        <div id="print_view" style="display:none;">
+          <p style="color:white">출력 결과</p>
+          <!--출력부분-->
+          <textarea id="printer"></textarea>
+        </div>
+
+        <br/>
+        <!-- PDB 디버거 커맨드를 입력할 수 있는 코드미러 에디터 view -->
+        <div id="pdb_view" style="display:none;">
+          <p style="color:white">pdb 명령어</p>
+          <textarea id="debug_input"></textarea>
+        </div>
+
+      </div>
+      <!-- row -->
+    </div>
+    <!-- container -->
+
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
+    <!-- Codemirror .js-->
+    <script src="static/js/codemirror.js"></script>
+    <script src="static/js/customCodemirror.js"></script>
+    <script src="static/js/python.js"></script>
+    <script src="static/js/active-line.js"></script>
+    <script src="static/js/simplescrollbars.js"></script>
+    <script src="static/js/show-hint.js"></script>
+    <script src="static/js/python-hint.js"></script>
+    <script src="static/js/comment.js"></script>
+    <script src="static/js/sublime.js"></script>
+
+    <!-- Alertify.js 알림 js -->
+    <!-- JavaScript -->
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.2/build/alertify.min.js"></script>
+
+    <!-- socket -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.6/socket.io.js"></script>
+
+    <!-- go.js -->
+    <script src="static/js/go.js"></script>
+
+    <!-- inner script -->
+    <script type="text/javascript" charset="utf-8">
+        
+      //vizualize 정보
+      var jsonArray = [];
+      // 전역변수 생성 순서 저장
+      var global_order = [];
+      // 스택 생성 순서 저장
+      var stack_order = [];
+      // 각각의 객체에 할당된 주소의 개수 저장
+      var overlap = {};
+      //객체 생성 순서 저장 -> global_order가 가리키는 object key 순서대로 저장
+      var object_order = [];
+      // stack의 함수의 매개변수를 저장한 배열
+      var stack_parameter = [];
+      var stdout = "";
+
+      //go.js 변수 선언
+      var $$ = go.GraphObject.make; // for conciseness in defining templates
+
+      var myDiagram = $$(go.Diagram, "myDiagramDiv", // create a Diagram for the DIV HTML element
+        {
+          "undoManager.isEnabled": true, // enable undo & redo
+          initialScale : 0.8,
+          "animationManager.duration": 300
+//           "animationManager.isEnabled": false
+        });
+        
+      // go.js 의 노드, 링크 리스트
+      var nodeDataArray = []
+      var linkDataArray = []
+        
+      //go.js node 색상 리스트
+      var color_list = ["lightblue","#4CAE4C" ,"#F0AD4E" , "pink", "#5BC0DE", "lightcoral"]
+      //color index
+      var color_index = 0
+
+      /* 코드미러 설정 부분 */
+      var editor = document.getElementById('editor');
+      var cm_editor = CodeMirror.fromTextArea(editor, {
+        mode: "python",
+        keyMap: "sublime",
+        lineNumbers: true,
+        lineWrapping: true, //내용이 너무 길면 다음줄에 작성
+        styleActiveLine: true, //포커스된 라인 색추가
+        theme: "darcula",
+        scrollbarStyle: "simple",
+        extraKeys: { //키설정
+          "tap": "autocomplete"
+        },
+        val: editor.value,
+        gutters: ["breakpoints","CodeMirror-linenumbers"]
+      });
+      cm_editor.setSize(500, 380);
+      //"inputRead" is the best event to show "auto completions" in "codemirror".
+      //The only drawback is that you can't show hints on backspace or delete.
+      cm_editor.on('inputRead', pythonHint); //자동완성 설정
+      cm_editor.on("gutterClick", breakpoints); //클릭하면 breakpoints 설정
+      var printer = document.getElementById('printer');
+      var cm_printer = CodeMirror.fromTextArea(printer, {
+        mode: "none",
+        lineNumbers: true,
+        lineWrapping: true,
+        styleActiveLine: true,
+        theme: "darcula",
+        scrollbarStyle: "simple",
+        readOnly: true, //printer이기 때문에 입력 제한한것
+        val: printer.value
+      });
+      cm_printer.setSize(580, 150);
+      var debug_input = document.getElementById('debug_input');
+      var cm_debug = CodeMirror.fromTextArea(debug_input, {
+        mode: "none",
+        lineNumbers: true,
+        theme: "darcula",
+        scrollbarStyle: "simple",
+        maxLength: 30, //최대 입력값 제한
+        val: debug_input.value
+      });
+      cm_debug.setSize(580, cm_debug.defaultTextHeight() + 6 * 5);
+      cm_debug.on("beforeChange", singleLine); //코드미러 입력라인 1줄로 제한
+      cm_debug.on("beforeChange", maxLength); //최대 입력값 제한
+
+        
+//       //codemirror text 정보 저장
+//       window.onbeforeunload = function() {
+//           console.log("새로고침")
+//           // 가져올 때
+//           name = sessionStorage.getItem('saved_name')
+//           cm_editor.setValue(name);
+//           console.log(name)
+//       };
+        
+      // 페이지 로딩 이후 작업
+      $(document).ready(function() {
+
+        //초기 페이지 로더 / print,pdb 코드미러 숨김
+        pageLoader();
+
+        //go.js
+        init();
+
+        //socketio 연결!!
+        var socket = io.connect('http://52.78.169.53:5000');
+
+        /* visualize 버튼 입력시 서버로 요청 보내는 이벤트 */
+        $('#visualize').on('click', function(e) {
+            
+          showLoader();
+          
+          // 저장할 때  (또는 localStorage 사용)  // -> 브라우저에 값 저장 
+          sessionStorage.setItem('saved_name', cm_editor.getValue());
+          console.log("editor text save");
+            
+          //결과창 초기화 및 view hide
+          cm_printer.setValue("");
+          //view 조정
+          $("#print_view").show('slow');
+          $("#pdb_view").hide('slow');
+          $("#myDiagramDiv").show('slow');
+          $("#viz_step_view").show('slow');
+
+          var version = $("select[name=version]").val();
+          console.log(cm_editor.getValue());
+          socket.emit('viz_request', {
+            version: version,
+            data: cm_editor.getValue()
+          });
+
+        });
+
+        /* run 버튼 입력시 서버로 요청 보내는 이벤트 */
+        $('#run').on('click', function(e) {
+
+          showLoader();
+          //결과창 초기화 및 view hide
+          cm_printer.setValue("");
+          //view 조정
+          $("#print_view").show('slow');
+          $("#pdb_view").hide('slow');
+          $('#myDiagramDiv').hide('slow');
+          $("#viz_step_view").hide('slow');
+
+          var version = $("select[name=version]").val();
+          console.log(cm_editor.getValue());
+          socket.emit('run_request', {
+            version: version,
+            data: cm_editor.getValue()
+          });
+        });
+
+        /* debug 버튼 입력시 서버로 요청 보내는 이벤트 */
+        $('#debug').on('click', function(e) {
+
+          //결과창 초기화 및 view hide
+          cm_printer.setValue("");
+
+          showLoader();
+          //debug는 응답 받으면 pdb_view 보여주기! 클릭시엔 항상 pdb_view는 숨김!
+          //view 조정
+          $("#print_view").show('slow');
+          $("#pdb_view").hide('slow');
+          $('#myDiagramDiv').hide('slow');
+          $("#viz_step_view").hide('slow');
+
+          var version = $("select[name=version]").val();
+          console.log(cm_editor.getValue());
+          socket.emit('debug_request', {
+            version: version,
+            data: cm_editor.getValue()
+          });
+        });
+
+        /* stop버튼 클릭시 이벤트 */
+        $("#stop").on('click', function(e) {
+          $("#print_view").hide('slow');
+          $("#pdb_view").hide('slow');
+          $('#myDiagramDiv').hide('slow');
+          $("#viz_step_view").hide('slow');
+
+          socket.emit('stop_request', {
+            data: "Stop Debugging!!"
+          });
+          //결과창 초기화
+          cm_printer.setValue("");
+          //editor breakpoint 제거
+          cm_editor.clearGutter("breakpoints");
+          //visaul 초기화
+          myDiagram.clear();
+        });
+
+        /* example버튼 클릭시 이벤트 */
+        $("#example").on('click', function(e) {
+          document.location.href = "/example";
+        });
+
+        /* PDB 명령어 입력시 서버로 요청 보내는 이벤트 */
+        cm_debug.on('keydown', function(cm, event) {
+          //엔터 입력시
+          if (event.which == 13) {
+            key = cm_debug.getValue();
+            if (key == 'q' || key == 'quit') {
+              //pdb_view 숨기기
+              $("#pdb_view").hide('slow');
+            }
+
+            var version = $("select[name=version]").val();
+            socket.emit('debug_input_request', {
+              version: version,
+              data: cm_debug.getValue()
+            });
+
+            //cm_debug - 커맨드 입력창 값 초기화
+            cm_debug.setValue("");
+          }
+        });
+          
+        // 처음버튼
+        $("#init_button").on('click', function(e) {
+            step = 1;
+
+            //breakpoint 초기화
+            cm_editor.clearGutter("breakpoints");
+            //breakpoint 설정
+            linenum = jsonArray[0]['line'];
+            setBreakPoint(linenum, "next")
+            
+            //printer 설정
+            cm_printer.setValue("")
+            cm_printer.setCursor(cm_printer.lineCount(), 0);
+            
+            //view 설정
+            $("#current_step").text(step);
+            
+            //gojs 초기화
+            myDiagram.clear();
+            return false;
+        });
+          
+        //visualize  이전 버튼
+        $("#pre_button").on('click', function(e) {
+          step = parseInt($("#current_step").text()) - 1
+          if (step <= 0) return;
+
+          event = jsonArray[step - 1]['event'];
+          globals = jsonArray[step - 1]['_globals'];
+          stdout = jsonArray[step - 1]['stdout'];
+
+          //breakpoint 초기화
+          cm_editor.clearGutter("breakpoints");
+          //view 설정
+          $("#current_step").text(step);
+          
+          //event의 동작에 따라 다르게 작동
+          if (event == "step_line") {
+            if (step >= 2) {
+              linenum = parseInt(jsonArray[step - 2]['line'])
+              setBreakPoint(linenum, "current")
+            }
+            if(linenum == parseInt(jsonArray[step - 1]['line'])){
+                cm_editor.clearGutter("breakpoints");
+            }
+            linenum = parseInt(jsonArray[step - 1]['line'])
+            setBreakPoint(linenum, "next")
+          } else if (event == "return" || event == "call") {
+            //현재 위치 찍기
+            linenum = parseInt(jsonArray[step - 1]['line'])
+            setBreakPoint(linenum, "current")
+          }
+            
+          //printer 설정
+          cm_printer.setValue("")
+          cm_printer.setValue(stdout);
+          cm_printer.setCursor(cm_printer.lineCount(), 0);
+            
+          if (step == 1){
+              //gojs 초기화
+              myDiagram.clear();
+              return;
+          }
+            
+          object_order = []
+          //Global, Object 시각화
+          drawGlobalsObjectsNode(globals);
+          //stack_locals 시각화
+          drawStackLocalsNode(stack_locals); // stack_locals 가져와야해
+            
+          myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
+          //gojs 초기화
+          myDiagram.requestUpdate();
+          return false;
+        });
+
+        //visualize  다음 버튼
+        $("#next_button").on('click', function(e) {
+
+          step = parseInt($("#current_step").text())
+          if (step == jsonArray.length) {
+            //breakpoint 초기화
+            cm_editor.clearGutter("breakpoints");
+            return
+          }
+
+          event = jsonArray[step]['event']
+          func_name = jsonArray[step]['func_name']
+          func_name = func_name.replace(/<|>/g, "")
+          globals = jsonArray[step]['_globals']
+          stack_locals = jsonArray[step]['stack_locals']
+          stdout = jsonArray[step]['stdout']
+
+          //breakpoint 초기화
+          cm_editor.clearGutter("breakpoints");
+          //view 설정
+          $("#current_step").text(step + 1)
+            
+          //event의 동작에 따라 breakpoint 다르게 작동
+          if (event == "step_line") {
+            if (step >= 1) {
+              linenum = parseInt(jsonArray[step - 1]['line'])
+              setBreakPoint(linenum, "current")
+
+              //현재위치 == 다음위치라면 pass -> 두번 같은 곳 찍으면 없어져버림
+              if (linenum == parseInt(jsonArray[step]['line'])) {
+                  cm_editor.clearGutter("breakpoints");
+              }
+            }
+            linenum = parseInt(jsonArray[step]['line'])
+            setBreakPoint(linenum, "next")
+          } else if (event == "return" || event == "call") {
+            //현재 위치 찍기
+            linenum = parseInt(jsonArray[step]['line'])
+            setBreakPoint(linenum, "current")
+          }
+          
+          //printer 설정
+          cm_printer.setValue("")
+          cm_printer.setValue(stdout);
+          cm_printer.setCursor(cm_printer.lineCount(), 0);
+            
+          except_global_link = false
+          // stack이 그려지면 global 링크들 모두 회색처리
+          if(stack_locals.length != 0) except_global_link = true
+            
+          object_order = []
+          //Global, Object 시각화
+          drawGlobalsObjectsNode(globals, except_global_link);
+          
+          //stack_locals 시각화 길이 0이면 안그림 
+          if(stack_locals.length != 0) {              
+              drawStackLocalsNode(stack_locals);
+          }
+            
+          myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
+            
+          myDiagram.requestUpdate();    
+//           myDiagram.currentCursor = "";
+          return false;
+        });
+        // 마지막 버튼
+        $("#last_button").on('click', function(e) {
+
+            step = parseInt($("#last_step").text());
+            
+            globals = jsonArray[step-1]['_globals'];
+            stdout = jsonArray[step-1]['stdout'];
+
+            //breakpoint 초기화
+            cm_editor.clearGutter("breakpoints");
+            
+            //view 설정
+            $("#current_step").text(step);
+
+            //마지막은 무조건 main의 return
+            if (event == "return") {
+              //현재 위치 찍기
+              linenum = parseInt(jsonArray[step - 1]['line'])
+              setBreakPoint(linenum, "current")
+            }
+            
+            //printer 설정
+            cm_printer.setValue("")
+            cm_printer.setValue(stdout);
+            cm_printer.setCursor(cm_printer.lineCount(), 0);
+            
+            //Global, object 시각화
+            drawGlobalsObjectsNode(globals);
+//             //stack_locals 시각화
+//             drawStackLocalsNode(stack_locals);            
+            myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);           
+            
+            myDiagram.delayInitialization(); //애니메이션 딜레이 없앰
+            myDiagram.requestUpdate();
+            
+            return false;
+//               var dataUri = "data:application/json;charset=utf-8,"+ encodeURIComponent(myDiagram.model.toJSON());
+//             var link = $("#link").attr("href", dataUri);
+            
+        });
+
+        /* cm_editor (코드 수정 에디터) 수정시 pdb_view(pdb 명령어 입력창) 숨겨야 오류 방지 가능 */
+        cm_editor.on('keydown', function(cm, event) {
+          //클릭시 pdb_view 숨김
+          $("#pdb_view").hide('slow');
+          cm_debug.setValue("");
+        });
+
+        // 서버로 부터 respons 받는 작업
+        //모든 response 감지하기 -> * 가 모든 response에 추가됨
+        var onevent = socket.onevent;
+        socket.onevent = function(packet) {
+          var args = packet.data || [];
+          onevent.call(this, packet); // original call
+          packet.data = ["*"].concat(args);
+          onevent.call(this, packet); // additional call to catch-all
+        };
+
+        //모든 response를 받으면 최소 2초동안 loader 숨기고 기본View 보여줌
+        socket.on('*', function(msg) {
+          //커서 위치 변경
+          cm_printer.setCursor(cm_printer.lineCount(), 0);
+
+          setTimeout(function() {
+            console.log("Response * !!");
+            hideLoader();
+          }, 1100);
+        });
+
+        /* 최초 연결 시 서버로 connect 요청받음*/
+        socket.on('after connect', function(msg) {
+          var connect_string = 'new_connect';
+          console.log(connect_string + " : ", msg);
+        });
+
+        /* 소켓 연결 해제시 */
+        socket.on('disconnect', function(msg) {
+          var disconnect_string = 'disconnect ';
+          console.log(disconnect_string + " : ", msg);
+
+          //결과창 초기화 및 view hide
+          cm_printer.setValue("");
+          $("#pdb_view").hide('slow');
+          $("#print_view").hide('slow');
+          $("#myDiagramDiv").hide('slow');
+          $("#viz_step_view").hide('slow');
+        });
+
+        /* visualize button 입력 시 서버로 viz 요청받음 */
+        socket.on('viz_response', function(msg) {
+          var viz_string = 'python visualize';
+          console.log(viz_string + " : ", msg);
+          // 나중엔 view hide로
+          $("#current_step").text("")
+          $("#last_step").text("")
+          cm_editor.clearGutter("breakpoints");
+
+          // File을 포함하면 컴파일 에러 문자 -> 따라서 오류가 아니면 정상적으로 진행
+          if (msg['data'].includes('File')){
+              cm_printer.setValue(msg['data']);
+              $("#myDiagramDiv").hide();
+              $("#viz_step_view").hide();
+          }
+          // 200스탭 넘으면 에러처리
+            //msg['data'].includes('exception_msg')||
+          else if( msg['data'].includes('uncaught_exception')){
+              temp = JSON.parse(msg['data']);
+              jsonArray = temp[0]
+              console.log(jsonArray)
+              
+              str = "";
+              size = jsonArray.length - 1;
+              exception = Object.keys(jsonArray[size]);
+              for(var i=0;i<exception.length;i++){
+                  str += exception[i] + " : " + jsonArray[size][exception[i]] + "\n";
+              }
+              cm_printer.setValue(str);
+              $("#myDiagramDiv").hide();
+              $("#viz_step_view").hide();
+          }
+          else{  
+            temp = JSON.parse(msg['data']);
+            jsonArray = temp[0]
+            console.log(jsonArray);
+              
+            // global_order, stack_order 초기화 -> 전역변수 , 스택 순서대로 그리기 위함
+            global_order = [];
+            stack_order = [];
+              
+            //stack_parameter 초기화
+            stack_parameter = [];
+            //stack 파라미터 정보 저장
+            getFunctionParameter();
+            
+            // func 매개변수들 미리 stack_order에 추가!! ###################### 맞나?
+            for(var i=0;i<stack_parameter.length;i++){
+                obj = stack_parameter[i];
+                name = Object.values(obj)[0]
+                name = name.split('(')[1]
+                name = name.split(')')[0]
+                stack = name.split(',')
+                
+                for(var j=0;j<stack.length;j++){
+                    stack_order.push(stack[j]);
+                }
+            }
+            // 받은 데이터 순환하며 순서 조정
+            for(var i=0; i<jsonArray.length;i++){
+                //dict를 배열로 만들어줌
+                global_key = Object.keys(jsonArray[i]['_globals']);
+                for(var j=0;j<global_key.length;j++){
+                    // global 선언된 변수를 순서 차례로 저장하는것!
+                    if(!global_order.includes(global_key[j])){
+                        global_order.push(global_key[j]);
+                    }
+                }
+                
+                stack = jsonArray[i]['stack_locals']
+//                 console.log("stack_key")
+//                 console.log(stack_key)
+                //dict를 배열로 만들어줌
+                for(var j=0;j<stack.length;j++){
+                    stack_key = Object.keys(stack[j][1]);
+                    for(var k=0;k<stack_key.length;k++){
+                        // global 선언된 변수를 순서 차례로 저장하는것!
+                        if(!stack_order.includes(stack_key[k])){
+                            stack_order.push(stack_key[k]);
+                        }
+                    }
+                }
+            }
+
+            console.log("global_order");
+            console.log(global_order);
+            console.log("stack_order")
+            console.log(stack_order);
+            
+            //view 설정
+            $("#current_step").text("1")
+            $("#last_step").text("" + jsonArray.length)
+            linenum = parseInt(jsonArray[0]['line'])
+            setBreakPoint(linenum, "next")
+
+            $("#myDiagramDiv").show();
+              
+            //gojs 초기화 -> *필요?*
+            myDiagram.clear();
+
+            }//else
+        });
+
+        /* run button 입력 시 서버로 run 요청받음 */
+        socket.on('run_response', function(msg) {
+          var run_string = 'python compile';
+          console.log(run_string + " : ", msg);
+          cm_printer.setValue(msg['data']);
+        });
+
+        /* debug button 입력 시 서버로 debug 요청받음 */
+        socket.on('debug_response', function(msg) {
+          var debug_string = 'python debug';
+          console.log(debug_string + " : ", msg);
+          //                 new_msg = cm_printer.getValue();
+          //                 new_msg = new_msg + msg['data'];
+          if (msg['success'] != null) {
+            cm_printer.setValue(msg['success']);
+            //linenum에 값이 존재한다면
+            if (msg['linenum'] != '-1') {
+              //breakpoint 초기화
+              cm_editor.clearGutter("breakpoints");
+
+              linenum = parseInt(msg['linenum']);
+              console.log(linenum);
+
+              setBreakPoint(linenum, "next")
+            }
+            $("#pdb_view").show('slow');
+          }
+          //debug 실패면
+          else if (msg['fail'] != null) {
+            cm_printer.setValue(msg['fail']);
+            $("#pdb_view").hide('slow');
+          }
+        });
+
+        /* debug_input 'enter' 입력 시 서버로 debug 요청받음 */
+        socket.on('debug_input_response', function(msg) {
+          var debug_string = 'python debug_input ';
+          console.log(debug_string + " : ", msg);
+          cm_printer.setValue(msg['data']);
+
+          //linenum에 값이 존재한다면
+          if (msg['linenum'] != '-1') {
+            //breakpoint 초기화
+            cm_editor.clearGutter("breakpoints");
+
+            linenum = parseInt(msg['linenum']);
+            console.log(linenum);
+
+            setBreakPoint(linenum, "next")
+          }
+          //오류 시
+          else {
+            cm_editor.clearGutter("breakpoints");
+          }
+          // 재시작 된 상태면 alert
+          if (msg['finish'] == '0') {
+            alertify.message("Pdb Debugging Finished -!");
+          } else if (msg['finish'] == '1') {
+            //alertify.message("Pdb Debugging Restart -!");
+            //오류 다시 시작하면 계속 알림뜸
+          }
+        });
+
+        // 함수 모음
+        //초기 페이지 로더
+        function pageLoader() {
+          $('.container').hide();
+          $('html').css({
+            'background-color': '#ea4961'
+          });
+          $('.page-loader').fadeIn();
+          cm_editor.focus();
+          cm_editor.setCursor(cm_editor.lineCount(), 0);
+        }
+
+        //버튼 클릭할 때 - 로더 보여주기
+        function showLoader() {
+          $('.container').hide();
+          $('html').css({
+            'background-color': '#137b85'
+          });
+          $('.debug-loader').fadeIn();
+        }
+        //응답 받을 때 - 로더 숨기기
+        function hideLoader() {
+          // 200 - fast / 600 - slow
+          $('.container').fadeIn();
+          $('.page-loader').fadeOut();
+          $('.debug-loader').fadeOut();
+          $('html').css({
+            'background-color': 'rgb(28,28,28)'
+          });
+          cm_editor.refresh();
+          cm_printer.refresh();
+          cm_debug.refresh();
+
+          myDiagram.delayInitialization();
+          myDiagram.requestUpdate();
+//           myDiagram.rebuildParts();
+//           myDiagram.updateAllTargetBindings();
+//           myDiagram.computeBounds();
+        }
+
+        //em_editor 커서 , breakpoint 설정
+        //type = next -  , current - 파랑
+        function setBreakPoint(linenum, type) {
+          if (linenum) {
+            // 라인 번호에 따른 breakpoint 설정!
+            var info = cm_editor.lineInfo(linenum - 1);
+            cm_editor.setGutterMarker(linenum - 1, "breakpoints",
+              info.gutterMarkers ? null : makeMarker(type));
+            //커서 위치 변경
+            cm_editor.setCursor(linenum - 1, 0);
+          }
+        }
+
+        //go.js 기본 설정
+        function init() {
+
+          // 노드 디자인 + 기능
+          myDiagram.nodeTemplate =
+            $$(go.Node, "Auto", // the Shape will go around the TextBlock
+              {
+//                 fromSpot: go.Spot.RightSide, 
+//                 toSpot: go.Spot.LeftSide,
+              },
+              $$(go.Shape, "RoundedRectangle", {
+                  fill: "black", // the default fill, if there is no data bound value
+//                   portId: "", cursor: "pointer", // the Shape is the port, not the whole Node
+                  // allow all kinds of links from and to this port
+//                   fromLinkable: true,
+//                   toLinkable: true
+                },
+                // Shape.fill is bound to Node.data.color
+                new go.Binding("fill", "color")),
+              $$(go.TextBlock, {
+                  font: "bold 14px sans-serif",
+                  stroke: 'black',
+                  margin: 6, // make some extra space for the shape around the text
+                  isMultiline: false, // don't allow newlines in text
+                  // TextBlock.text is bound to Node.data.key
+                },
+                new go.Binding("text", "text"))
+            );
+
+          //링크 디자인 + 기능
+          myDiagram.linkTemplate =
+            $$(go.Link, {
+//                 routing: go.Link.Orthogonal,
+//                 routing: go.Link.AvoidsNodes,
+                curve: go.Link.Bezier,
+                fromSpot: go.Spot.RightSide, 
+                toSpot: go.Spot.LeftSide,
+                corner: 40
+//                 curve: go.Link.Bezier
+              }, // allow the user to relink existing links
+              $$(go.Shape, {
+                  strokeWidth: 1.5
+                },
+                new go.Binding("stroke", "color")),
+              $$(go.Shape, {
+                  toArrow: "Standard",
+                },
+                new go.Binding("fill", "color")),
+            );
+            
+             // 전역 변수 template
+             var globalGroupTemplate =
+                $$(go.Group, "Vertical",{
+                     avoidable: false,
+                     layerName: "Background"
+                 },
+                    $$(go.GridLayout, { wrappingColumn: 1 }),
+                       $$(go.TextBlock,
+                    {
+                      font: "bold 17px sans-serif",
+                      alignment: go.Spot.Left,
+                      isMultiline: false  // don't allow newlines in text
+                    },
+                    new go.Binding("text", "text").makeTwoWay(),
+                    new go.Binding("stroke", "color")),
+                     $$(go.Panel, "Auto",
+                        { name: "PANEL",
+//                           margin: new go.Margin(0, 30, 0, 0),
+                        },
+                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
+                      {
+                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 3,
+//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
+                      }),
+                    $$(go.Placeholder, { margin: 10, background: "transparent" })  // represents where the members are
+                  )
+                );
+                
+                // 객체 template
+                var objectGroupTemplate =
+                $$(go.Group, "Vertical",{
+                     avoidable: false,
+                     layerName: "Background"
+                 },
+                   $$(go.GridLayout, { 
+                        alignment: go.GridLayout.Center,
+//                         wrappingColumn: Infinity,
+                        cellSize: new go.Size(1, 1),
+                        spacing: new go.Size(4, 4)
+                    }),
+                       $$(go.TextBlock,
+                    {
+                      font: "bold 14px sans-serif",
+                      alignment: go.Spot.Left,
+                    },
+                    new go.Binding("text", "text").makeTwoWay(),
+                    new go.Binding("stroke", "color")),
+                     $$(go.Panel, "Auto",
+                        { name: "PANEL",
+                        },
+                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
+                      {
+                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 3,
+//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
+                      }),
+                    $$(go.Placeholder, { margin: 10, background: "transparent" })  // represents where the members are
+                  )
+                );
+            
+            
+               //템플릿 맵 설정
+               var templmap = new go.Map(); 
+
+              templmap.add("", globalGroupTemplate);
+              templmap.add("object", objectGroupTemplate);
+              // for the default category, "", use the same template that Diagrams use by default;
+
+              myDiagram.groupTemplateMap = templmap;
+
+        } // init
+        
+        //global, object 그리는 함수
+        //go.js 노드, 링크 데이터 채워 그리기 -> global <- 링크 -> object // -> 특정 위치에서
+        function drawGlobalsObjectsNode(globals, except_link){
+          
+          // 노드, 링크 초기화
+          nodeDataArray = [];
+          linkDataArray = [];
+          // 색상 초기화
+          color_index = 0;
+            
+          //frames 생성
+          dict = {};
+          dict["key"] = "프레임";
+          dict["text"] = "프레임";
+          dict["color"] = "black";
+          dict["isGroup"] = true;
+          nodeDataArray.push(dict);
+            
+          //global frame 생성
+          dict = {}
+          dict["key"] = "전역변수";
+          dict["text"] = "전역변수";
+          dict["color"] = "black";
+          dict["isGroup"] = true;
+          dict["group"] = "프레임";
+          nodeDataArray.push(dict);
+
+          // 임시 globalNode
+          tempGlobalNode = [];
+          // 임시 objectNode
+          tempObjectNode = [];
+          // 임시 linkData
+          tempLinkData = [];
+          // object들의 주소를 담은 배열 -> 중복 검사하기위해
+          object_ref = [];
+          // object의 생성 순서 
+          object_order = [];
+            
+          // 모든 경우에 globals 변수 검사 -> {x:[~~],:"~~", ...}
+          //global_order의 변수 순서대로 for문 돌며 검사  ************************* 얘 덕분에 순서대로 해결
+          global_order.forEach(function(key){
+              
+              if(globals.hasOwnProperty(key)){
+                  if(isPrimitive(globals[key])){
+                  
+                      global = {};
+                      global["key"] = ""+key;
+                      global["text"] = key + " = " +globals[key];
+                      global["color"] = color_list[color_index % color_list.length];
+                      global["group"] = "전역변수";
+                      color_index ++;
+                      tempGlobalNode.push(global);
+                  }
+                  else{
+                      //전역 변수 x
+                      global = {}
+                      global["key"] = ""+key;
+                      global["text"] = key;
+                      global["color"] = color_list[color_index % color_list.length];
+                      global["group"] = "전역변수";
+                      color_index ++;
+                      tempGlobalNode.push(global);
+                      
+                      //전역 객체-> 변수 x가 가르키는 주소
+                      object = {}
+                      object["key"] = ""+globals[key][1]
+                      // 내부 데이터는 아래에서 
+                      
+                      //전역 - 객체 링크
+                      link = {}
+                      link["from"] = global["key"];
+                      link["to"] = object["key"];
+                      //stack을 그리면 link 색상 변경
+                      if(except_link) link["color"] = "grey";
+                      linkDataArray.push(link);
+                      
+                      // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
+                      // (x = [1,2,3] , y = x)인 경우에 해당되지
+                      if (!object_ref.includes(object["key"])){
+
+                          //recursive draw
+                          // 전체 globals data , key의 주소
+                          //재귀로 반복하면서 전역 객체 생성
+                          //컬러 반복 칠하기 위함
+                          decode_type(globals[key], "객체", true);
+                     
+                      }//if
+                  }
+              }// hasOwnProperty
+            });
+            
+            //전체 object 주소들 저장
+            console.log("object_ref");
+            console.log(object_ref);
+            
+//             //link global_order 순서대로 정렬 ##################################필요??
+//             for(var i=0;i<global_order.length;i++){
+//                 for(var j=0;j<tempLinkData.length;j++){
+//                     if(global_order[i] == tempLinkData[j]["from"]){
+                        
+//                     }
+//                 }
+//             }
+            //################################################################################ *link, node 순서 바꾸는 작업 필요?*
+            overlap = {}
+            //object가 받는 링크의 개수 체크 -> 링크 2개를 받고 재귀로 생성되지 않는 애는 나중에 그림
+            for(var i=0;i<linkDataArray.length;i++){
+                overlap_key = ""+linkDataArray[i]["to"]
+                if(!overlap.hasOwnProperty(overlap_key)){
+                    overlap[overlap_key] = 1
+                }
+                else{
+                    overlap[overlap_key] += 1
+                }
+            }
+            
+            //중복된 주소 체크
+            console.log(overlap)
+            
+            // 그리는 순서 정리하기 !! *중요 1. global 생성 순서대로 nodeDataArray 정렬 2. global 생성 순서대로 object,linkDataArray 재 정렬
+            // 호출된 global 변수 순서대로 저장 -> 순서는 global_order에 저장해둠
+            for(var i=0;i<global_order.length;i++){
+                //1.
+                for(var j=0;j<tempGlobalNode.length;j++){
+                   // 순서에 해당하는 Node가 존재한다면 먼저 넣음
+                   if(global_order[i] == tempGlobalNode[j]['key']){
+                       nodeDataArray.push(tempGlobalNode[j]);
+                   }
+                }
+                
+                //2.
+                tmp_link = []
+                // global 변수가 포인팅하는 object 따로 저장 -> linkedList 잘 표현하기 위해서 
+                for(var j=0;j<linkDataArray.length;j++){
+                    //포인터가 아닐때 -> ex) x,y,i 등등
+                    if(global_order[i] == linkDataArray[j]["from"]){
+                        link_to = linkDataArray[j]["to"]; // global 변수가 가르키는 목적지 key
+                        if (!object_order.includes(link_to)) object_order.push(link_to);
+                    }
+                    //포인터가 있다면 검사 -> p들어가면 포인터
+                    if(linkDataArray[j]["from"].includes('p')){
+                        //p_( ) -> () 이 부분만 가져옴
+                        check = linkDataArray[j]["from"].split("_")[1]
+                        
+                        // 지금까지 link 탄 모든 주소 저장해둔거 다시 확인해서 돔 
+                        //#######################################################but 지금 비효율 앞에있는 인덱스는 불필요하게 계속 돔
+                        for(var z=0;z<object_order.length;z++){   
+                            tmp_link = object_order[z];
+                            // check(from)와 이전 link (to)같으면 해당 인덱스의 "to" 부분 추가
+                            if(tmp_link == check){
+                                link_to = linkDataArray[j]["to"]; // 다음 링크
+                                //차이가 1이라면 추가 아니면 재귀로 생성된게 아니기 때문에 그냥 pass!
+                                if(Math.abs(parseInt(tmp_link)-parseInt(link_to))!=1 && overlap[link_to] >= 2 ){ // ####얘도 좀 불안
+//                                     overlap[link_to]-=1 // 한번 지나쳤으니 -1
+                                    continue
+                                }
+                                else{
+                                    if(!object_order.includes(link_to)) object_order.push(link_to);
+                                    overlap[link_to]-=1 // 한번 지나쳤으니 -1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            console.log("object_order");
+            console.log(object_order);
+            
+            // Object가 비었으면 Objectframe 생성 X
+            if(tempObjectNode.length != 0){
+                //Object frame 생성
+                  dict = {}
+                  dict["key"] = "객체";
+                  dict["text"] = "객체";
+                  dict["color"] = "black"
+                  dict["isGroup"] = true;
+                  dict["category"] = "object";
+                  nodeDataArray.push(dict);
+                // object_order 순서대로 먼저 저장
+                for(var i=0;i<object_order.length;i++){
+                     for(var j=0;j<tempObjectNode.length;j++){
+                            if(object_order[i] == tempObjectNode[j]['key']){
+                                nodeDataArray.push(tempObjectNode[j]);
+                            }
+                     }
+                }
+                // 나머지 tempObject -> nodeDataArray에 저장 ############################################## 주의
+                for(var j=0;j<tempObjectNode.length;j++){
+                    if(!object_order.includes(tempObjectNode[j]['key'])){
+                        nodeDataArray.push(tempObjectNode[j]);
+                    }
+                }
+            }
+            
+            console.log("nodeDataArray")
+            console.log(nodeDataArray)
+            console.log("linkDataArray")
+            console.log(linkDataArray)
+        }
+        
+        // stack 변수 그리는 함수
+        //stack 그리기 -> 특정 위치에서 line 1 , line 10 위치 등등
+        function drawStackLocalsNode(stack_locals){
+            console.log("stack_locals");
+            console.log(stack_locals);
+            
+            // drawglobals에도 있는 변수들 무조건 같은 이름 써야함
+            // 임시 globalNode 
+//             tempGlobalNode = [];
+            // 임시 objectNode 
+            tempObjectNode = [];
+            //스택 주소
+            object_ref = [];
+            
+            //함수 이름
+            for(var i=0;i<stack_locals.length;i++){
+                func_name = stack_locals[i][0] //함수이름
+                
+                  //func stack 틀생성
+                  dict = {};
+                  dict["key"] = "stack_"+func_name;
+                  dict["text"] = func_name;
+                  dict["color"] = "black";
+                  dict["group"] = "프레임"
+                  dict["isGroup"] = true;
+                  nodeDataArray.push(dict);                  
+            }
+            
+            //stack 생성 순서대로 검사 ###################################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
+            for(var i=0;i<stack_order.length;i++){
+                // 여러가지 스택 함수들 검사
+                for(var j=0;j<stack_locals.length;j++){
+                    stack_variable = stack_locals[j];
+                    //stack_variable[0] -> 함수 이름 / stack_variable[1] -> 스택 변수들
+                    // 각각의 함수들 중 stack_order값을 포함하고 있다면 추가
+                    if(stack_variable[1].hasOwnProperty(stack_order[i])){
+                          func_name = stack_variable[0];
+                          key = stack_order[i];
+                          value = stack_variable[1][stack_order[i]];
+//                           console.log(key)
+//                           console.log(value)
+//                           console.log(func_name)
+                          //func 함수의 stack 변수 생성
+                          if(isPrimitive(value)){
+                              stack_global = {};
+                              if(key == "__return__") stack_global["text"] = "Return = " +value;
+                              else stack_global["text"] = key + " = " +value;
+                              
+                              stack_global["key"] = "stack_"+key;
+                              stack_global["color"] = color_list[color_index % color_list.length];
+                              stack_global["group"] = "stack_"+func_name;
+                              color_index ++;
+                              nodeDataArray.push(stack_global);
+                          }
+                          else{
+                              //스택 변수 x
+                              stack_global = {}
+                              stack_global["key"] = "stack_"+key;
+                              stack_global["text"] = key;
+                              stack_global["color"] = color_list[color_index % color_list.length];
+                              stack_global["group"] = "stack_"+func_name;
+                              color_index ++;
+                              nodeDataArray.push(stack_global);
+                      
+                              //스택 객체-> 변수 x가 가르키는 주소
+                              stack_object = {}
+                              stack_object["key"] = ""+value[1]
+                              // 내부 데이터는 아래에서 
+                      
+                              //스택 - 객체 링크
+                              link = {}
+                              link["from"] = stack_global["key"];
+                              link["to"] = stack_object["key"];
+                              linkDataArray.push(link);
+                      
+//                               // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
+//                               // (x = [1,2,3] , y = x)인 경우에 해당되지
+                              if (!object_ref.includes(stack_object["key"])){
+
+                                  //recursive draw
+                                  // 전체 globals data , key의 주소
+                                  //재귀로 반복하면서 전역 객체 생성
+                                  //컬러 반복 칠하기 위함
+                                  decode_type(value, "스택", true);
+                     
+                              }//if
+                          }//else
+                        }//hasOwnProperty
+                    }//stack_locals
+                }
+            
+            
+
+            // Object가 비었으면 Objectframe 생성 X
+            if(tempObjectNode.length != 0){
+//                 //Object frame 생성
+//                   dict = {}
+//                   dict["key"] = "스택";
+//                   dict["text"] = "스택";
+//                   dict["color"] = "black"
+//                   dict["isGroup"] = true;
+//                   dict["category"] = "object";
+//                   nodeDataArray.push(dict);
+//                 // object_order 순서대로 먼저 저장 ###############################stack에서도 필요?
+//                 for(var i=0;i<object_order.length;i++){
+//                      for(var j=0;j<tempObjectNode.length;j++){
+//                             if(object_order[i] == tempObjectNode[j]['key']){
+//                                 nodeDataArray.push(tempObjectNode[j]);
+//                             }
+//                      }
+//                 }
+                for(var j=0;j<tempObjectNode.length;j++){
+                    if(!stack_order.includes(tempObjectNode[j]['key'])){
+                        nodeDataArray.push(tempObjectNode[j]);
+                    }
+                }
+            }
+        }
+                        
+        // 함수 파라미터 가져오기 -> func(a,b,c)
+        function getFunctionParameter(){
+            check_overlap = [];
+            for(var i=0;i<jsonArray.length;i++){
+                event = jsonArray[i]['event']
+                if(event == "call"){
+                       def_line = jsonArray[i]['line']
+                       func_name = jsonArray[i]['func_name']
+                
+                       //중복 확인 안 넣었으면 넣어줌
+                       if(!check_overlap.includes(func_name)){
+                           check_overlap.push(func_name);
+                           code = cm_editor.getLine(def_line - 1);
+                           code = code.replace('def ',"");
+                           code = code.replace(':',"");
+                           code = code.replace('/\s/gi',"")
+
+                           dict = {}
+                           dict[func_name] = code
+                           stack_parameter.push(dict);
+                       }
+                }
+            }
+            console.log("stack_parameter")
+            console.log(stack_parameter)
+            
+        }
+        
+        // 라인 별 json 데이터 파싱
+        // state = true -> 처음 생성 객체
+        // state = false -> recursive로 생성된 객체
+        // object -> object 링크
+        function decode_type(data,group_key, state){
+
+            // 프리미티브이면 생성
+            if(isPrimitive(data)){
+                //python에선 null -> None으로 표현
+                if(typeof(data)===typeof("")) data = "'"+data+"'";
+                if(data == null) data="None";
+                subObject = {}
+                subObject["key"] = "data_"+group_key+"_"+data;
+                subObject["text"] = ""+data;
+                subObject["color"] = color_list[color_index % color_list.length];
+                subObject["group"] = ""+group_key;
+                color_index ++;
+                tempObjectNode.push(subObject);
+                return;
+            }
+            else{
+                
+                // data[0] -> 타입 | data[1] -> 주소
+                
+                //포인터 객체
+                tmpObject = {};
+//                 tmpObject["key"] = "p"+Math.floor(Math.random() * 100000) + 1000;
+                tmpObject["key"] = "p_"+group_key+"_"+data[1];
+                
+                //포인터 받는 객체
+                subObject = {};
+                subObject["key"] = ""+data[1];
+               
+                //포인터-> 객체로 링크 연결해줌 -> state=true 인경우 -> decode_type() 첫 선언시 -> 링크 안검 -> 객체 생성만
+                if(state==false){
+                    tmpObject["text"] = "*";
+                    tmpObject["color"] = color_list[color_index % color_list.length];
+                    tmpObject["group"] = ""+group_key;
+                    tempObjectNode.push(tmpObject);
+                    
+                    //전역 - 객체 링크
+                    link = {}
+                    link["from"] = tmpObject["key"];
+                    link["to"] = subObject["key"];
+                    linkDataArray.push(link);
+                }
+                
+                //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만 
+                if (!object_ref.includes(subObject["key"])){
+                      object_ref.push(subObject["key"]);
+                
+                // 객체 생성 2단계
+                //1. compound 타입인게 확정났으니 그룹(새로 생성될 객체) 하나 만들어줘야함!
+                subObject["text"] = ""+data[0];
+                subObject["group"] = "객체";
+                subObject["isGroup"] = true
+                subObject["category"] = "object";
+                tempObjectNode.push(subObject);
+                
+                //2. 해당 object 값안에서 재귀로 계속 object 생성
+                for(var index in data){
+                    if(index >= 2){
+                              
+                        if(data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET"){
+                            value = data[index];
+                            decode_type(value, data[1], false);
+                        }
+                        else if(data[0] == "DICT"){
+                            value = data[index];
+                            decode_type(value, data[1], false);
+                        }
+                        //함수 일때
+                        else{
+                            isFind = false;
+                            // <function func ........> 중 func 를 가져오는 과정
+                            func_name = data[2].split(' ')[1]
+                            //next_button  클릭시 getStackLocalsParameter 로 저장된 parameter list
+                            for(var i=0;i<stack_parameter.length;i++){ 
+                                //key -> global['key'] -> 함수이름
+                                if(stack_parameter[i][func_name]!=null || stack_parameter[i][func_name]!=undefined){
+                                    value = stack_parameter[i][func_name];
+                                    isFind = true;
+                                 }
+                             }
+                            //못찾았으면 걍 이름() -> 못찾는 경우 = 함수가 안불렸을 때
+                            if(!isFind){
+                                value = func_name+"()";
+                            }
+                            decode_type(value,data[1], false);
+                         }//else
+                    }// >=2
+                }//for
+                }//!object_ref
+            }//else
+        }//func
+
+        //type 검사
+        function isPrimitive(test) {
+          return (test !== Object(test));
+        };
+          
+        //1_1234 형태에서 앞 쪽 기준 오름차순
+        function sortAsc(a, b) {
+            // a에서 b를 뺀 결과가 음수면 a가 b보다 작고, 0이면 같다.
+            // sort메소드는 return 값이 음수,양수,0인지에 따라서 순서를 정한다.
+            array1 = a.split("_")
+            array2 = b.split("_")
+            
+            return array1[0] - array2[0];
+        };
+        //1_1234 형태에서 뒤 쪽 기준 내림차순
+        function sortDesc(a, b) {
+            // a에서 b를 뺀 결과가 음수면 a가 b보다 작고, 0이면 같다.
+            // sort메소드는 return 값이 음수,양수,0인지에 따라서 순서를 정한다.
+            array1 = a.split("_")
+            array2 = b.split("_")
+            
+            
+            return array2[1] - array1[1];
+        };
+          //1_1234 형태에서 앞 쪽 기준 오름차순
+        function sortDesc2(a, b) {
+            // a에서 b를 뺀 결과가 음수면 a가 b보다 작고, 0이면 같다.
+            // sort메소드는 return 값이 음수,양수,0인지에 따라서 순서를 정한다
+            array1 = a.split("_")
+            array2 = b.split("_")
+            
+            return array1[1] - array2[1];
+        };
+//         //스크롤 block
+//         function disableScrolling(){
+//             var x=window.scrollX;
+//             var y=window.scrollY;
+//             window.onscroll=function(){window.scrollTo(x, y);};
+//         }
+//         //스크롤 enable
+//         function enableScrolling(){
+//             window.onscroll=function(){};
+//         }
+
+      });
+    </script>
+</body>
+</html>
