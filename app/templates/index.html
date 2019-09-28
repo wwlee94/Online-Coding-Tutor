@@ -233,26 +233,16 @@
       var global_order = [];
       // 스택 생성 순서 저장
       var stack_order = [];
-      // dict 타입 생성 순서 저장
+      // DICT 타입 생성 순서 저장
       var dict_order = [];
-      // 각각의 객체에 할당된 주소의 개수 저장
-      var overlap = {};
       //객체 생성 순서 저장 -> global_order가 가리키는 object key 순서대로 저장
       var object_order = [];
-      // stack의 함수의 매개변수를 저장한 배열
+      // 함수 매개변수를 저장한 배열
       var stack_parameter = [];
+      // 각각의 객체에 할당된 주소의 개수 저장 == 링크를 받는 개수
+      var overlap = {};
+
       var stdout = "";
-
-      //go.js 변수 선언
-      var $$ = go.GraphObject.make; // for conciseness in defining templates
-
-      var myDiagram = $$(go.Diagram, "myDiagramDiv", // create a Diagram for the DIV HTML element
-        {
-          "undoManager.isEnabled": true, // enable undo & redo
-          initialScale: 0.8,
-          "animationManager.duration": 300
-          //           "animationManager.isEnabled": false
-        });
 
       // go.js 의 노드, 링크 리스트
       var nodeDataArray = []
@@ -264,6 +254,26 @@
       var color_index = 0
       //DICT 타입인지 아닌지
       var isDictType = false
+
+      //go.js 변수 선언
+      var $$ = go.GraphObject.make; // for conciseness in defining templates
+
+      var myDiagram = $$(go.Diagram, "myDiagramDiv", // create a Diagram for the DIV HTML element
+        {
+          "undoManager.isEnabled": true, // enable undo & redo
+          // initialScale: 0.8,
+          // initialAutoScale: go.Diagram.UniformToFill, //개쩐다
+          // initialDocumentSpot: go.Spot.TopCenter,
+          // initialViewportSpot: go.Spot.TopCenter,
+          "animationManager.duration": 300,
+          //           "animationManager.isEnabled": false
+          // allowHorizontalScroll: false,
+          // allowVerticalScroll: false
+        });
+      myDiagram.autoScale=go.Diagram.UniformToFill;
+      myDiagram.contentAlignment = go.Spot.Center;
+      myDiagram.scrollMode = go.Diagram.InfiniteScroll;
+      // myDiagram.model.isReadOnly = true;
 
       /* 코드미러 설정 부분 */
       var editor = document.getElementById('editor');
@@ -467,7 +477,7 @@
           return false;
         });
 
-        //visualize  이전 버튼
+        //visualize  이전 버튼 ##############################next만 잘 될 수도 있음 주의 할 것
         $("#pre_button").on('click', function(e) {
           step = parseInt($("#current_step").text()) - 1
           if (step <= 0) return;
@@ -733,7 +743,7 @@
             // 받은 데이터 순환하며 순서 조정
             for (var i = 0; i < jsonArray.length; i++) {
               global_var = jsonArray[i]['_globals']
-              //dict를 배열로 만들어줌
+              //딕셔너리를 배열로 만들어줌
               global_key = Object.keys(global_var);
               for (var j = 0; j < global_key.length; j++) {
                 key = global_key[j];
@@ -742,7 +752,7 @@
                   global_order.push(key);
                 }
 
-                //dict 타입 생성 순서 저장
+                // DICT 타입 생성 순서 저장
                 // ex) global_var[key] = ["DICT",1,["key",value],["value",[1,2,3]]] -> "key가 먼저 생성"
                 if (global_var[key] != undefined && global_var[key] != null) {
                   if (global_var[key].length >= 3) {
@@ -946,9 +956,9 @@
           object_ref = [];
           // object의 생성 순서
           object_order = [];
-
           //dict 생성
           dict_ref = [];
+
           // 모든 경우에 globals 변수 검사 -> {x:[~~],:"~~", ...}
           //global_order의 변수 순서대로 for문 돌며 검사  ************************* 얘 덕분에 순서대로 해결
           global_order.forEach(function(key) {
@@ -1000,13 +1010,11 @@
               }
             } // hasOwnProperty
           });
-
+          console.log("dict_ref");
+          console.log(dict_ref);
           //전체 object 주소들 저장
           console.log("object_ref");
           console.log(object_ref);
-          console.log("dict_ref");
-          console.log(dict_ref);
-
           //             //link global_order 순서대로 정렬 ##################################필요??
           //             for(var i=0;i<global_order.length;i++){
           //                 for(var j=0;j<tempLinkData.length;j++){
@@ -1090,6 +1098,8 @@
             dict["isGroup"] = true;
             dict["category"] = "object";
             nodeDataArray.push(dict);
+
+            //#########################################동작은 하는데 매우 비효율적인듯..?
             // object_order 순서대로 먼저 저장
             for (var i = 0; i < object_order.length; i++) {
               for (var j = 0; j < tempObjectNode.length; j++) {
@@ -1098,10 +1108,12 @@
                 }
               }
             }
+            // dict_order 순서에 맞게 구한 후 tempObjectNode와 비교할 문자열 넣은리스트
             token_list = []
             //dict_order 순서대로 저장
             for(var i = 0;i < dict_order.length;i++){
               for(var j = 0;j< tempObjectNode.length;j++){
+                // subdict부분만 조정하면 됨
                 if(tempObjectNode[j]['category'] == "subdict"){
                   token = tempObjectNode[j]['key'].split("_")[1]
                   if(token == dict_order[i]){
@@ -1114,7 +1126,6 @@
 
             //나머지 tempObject -> nodeDataArray에 저장 ############################################## 주의
             for (var j = 0; j < tempObjectNode.length; j++) {
-              console.log(tempObjectNode[j]['key']);
               if (!object_order.includes(tempObjectNode[j]['key']) && !token_list.includes(tempObjectNode[j]['key'])) {
                 nodeDataArray.push(tempObjectNode[j]);
               }
@@ -1164,9 +1175,7 @@
                 func_name = stack_variable[0];
                 key = stack_order[i];
                 value = stack_variable[1][stack_order[i]];
-                //                           console.log(key)
-                //                           console.log(value)
-                //                           console.log(func_name)
+
                 //func 함수의 stack 변수 생성
                 if (isPrimitive(value)) {
                   stack_global = {};
@@ -1278,10 +1287,15 @@
 
           // 프리미티브이면 생성
           if (isPrimitive(data)) {
-            //python에선 null -> None으로 표현
+            //문자열로 되어있으면 '' 추가
             if (typeof(data) === typeof("")) data = "'" + data + "'";
+            //python에선 null -> None으로 표현
             if (data == null) data = "None";
-            if (isDictType) text = data + " : ";
+            //DICT 타입이면
+            if (isDictType) {
+              text = data + " : ";
+              data = ""
+            }
             else text = "" + data
             subObject = {}
             subObject["key"] = "data_" + group_key + "_" + data;
@@ -1335,20 +1349,23 @@
                   if (data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET") {
                     value = data[index];
                     decode_type(value, data[1], false);
-                  } else if (data[0] == "DICT") {
+                  }
+                  else if (data[0] == "DICT") {
 
                     key = data[index][0]
                     value = data[index][1]
 
                     subdict = {};
                     subdict["key"] = data[1] + "_" + key;
+
+                    // 데이터가 중복으로 들어가지 않도록
                     if(!dict_ref.includes(subdict["key"])){
                       dict_ref.push(subdict["key"])
-                    subdict["color"] = "black"
-                    subdict["group"] = "" + data[1];
-                    subdict["isGroup"] = true;
-                    subdict["category"] = "subdict";
-                    tempObjectNode.push(subdict);
+                      subdict["color"] = "black"
+                      subdict["group"] = "" + data[1];
+                      subdict["isGroup"] = true;
+                      subdict["category"] = "subdict";
+                      tempObjectNode.push(subdict);
 
                     if (isPrimitive(value)) {
                       //python에선 null -> None으로 표현
@@ -1356,18 +1373,20 @@
                       if (value == null) value = "None";
                       text = "'" + key + "' : " + value;
                       subObject = {}
-                      subObject["key"] = "data_" + subdict["key"] + "_" + key;
+                      subObject["key"] = "data_" + subdict["key"];
                       subObject["text"] = text;
                       subObject["color"] = color_list[color_index % color_list.length];
                       subObject["group"] = subdict["key"];
                       tempObjectNode.push(subObject);
                     } else {
+                      //true이면 "'key' : ??" 형태로 출력하기 위함
                       isDictType = true
-                      decode_type(key, subdict["key"], true); //key는 compound type이 될수 없으니
+                      decode_type(key, subdict["key"], true); //key는 compound type이 될수 없으니 링크없이
                       isDictType = false
                       decode_type(value, subdict["key"], false);
                     }
                   }
+                }
                   //함수 일때
                   else {
                     isFind = false;
@@ -1391,7 +1410,6 @@
                     decode_type(value, data[1], false);
                   } //else
                 } // >=2
-              }
               } //for
             } //!object_ref
           } //else

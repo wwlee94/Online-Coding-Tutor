@@ -1,5 +1,5 @@
 #-*- coding:utf-8 -*-
-# 기본 코드 작성틀
+# 기본 python 코드 작성 틀
 
 # 다음과 같이 import를 사용할 수 있습니다.
 # import math

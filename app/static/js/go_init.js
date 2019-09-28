@@ -1,14 +1,12 @@
         //go.js 기본 설정
         function init() {
 
-          myDiagram.scrollMode = go.Diagram.InfiniteScroll
-
           // 노드 디자인 + 기능
           myDiagram.nodeTemplate =
             $$(go.Node, "Auto", // the Shape will go around the TextBlock
               {
-                //                 fromSpot: go.Spot.RightSide,
-                //                 toSpot: go.Spot.LeftSide,
+                  // fromSpot: go.Spot.RightSide,
+                  // toSpot: go.Spot.LeftSide,
               },
               $$(go.Shape, "RoundedRectangle", {
                   fill: "black", // the default fill, if there is no data bound value
@@ -32,11 +30,11 @@
           //링크 디자인 + 기능
           myDiagram.linkTemplate =
             $$(go.Link, {
-                //                 routing: go.Link.Orthogonal,
-                //                 routing: go.Link.AvoidsNodes,
+                                // routing: go.Link.Orthogonal,
+                                // routing: go.Link.AvoidsNodes,
                 curve: go.Link.Bezier,
                 fromSpot: go.Spot.RightSide,
-                toSpot: go.Spot.LeftSide,
+                toSpot: go.Spot.AllSides,
                 corner: 40
                 //                 curve: go.Link.Bezier
               }, // allow the user to relink existing links
@@ -47,7 +45,7 @@
               $$(go.Shape, {
                   toArrow: "Standard",
                 },
-                new go.Binding("fill", "color")),
+                new go.Binding("fill", "color"))
             );
 
           // 전역 변수 template
@@ -94,7 +92,7 @@
                 alignment: go.GridLayout.Center,
                 //                         wrappingColumn: Infinity,
                 cellSize: new go.Size(1, 1),
-                spacing: new go.Size(4, 4)
+                spacing: new go.Size(5, 5)
               }),
               $$(go.TextBlock, {
                   font: "bold 14px sans-serif",

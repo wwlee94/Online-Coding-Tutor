@@ -1,5 +1,5 @@
 #-*- coding:utf-8 -*-
-# 딕셔너리, 리스트 append 예제
+# dictionary & list append 예제
 
 list = []
 dict = {}
