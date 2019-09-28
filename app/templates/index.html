@@ -156,12 +156,12 @@
 
           <br/>
           <br/>
-          
+
           <div id="viz_step_view" style="display:none;">
             <button id="init_button" class="btn btn-primary" type="button">처음</button>&nbsp;
             <button id="pre_button" class="btn btn-primary" type="button">이전</button>&nbsp;
               <span>
-              현재 단계 : <span id="current_step" style="font-size:large;"> </span> &nbsp; / &nbsp; 
+              현재 단계 : <span id="current_step" style="font-size:large;"> </span> &nbsp; / &nbsp;
               마지막 단계 : <span id="last_step" style="font-size:large;"> </span> &nbsp;
               </span>
             <button id="next_button" class="btn btn-primary" type="button">다음</button>&nbsp;
@@ -171,10 +171,10 @@
       </div>
 
       <div class="col-md-6" style="margin-top:10px">
-          
+
         <!--  go.js를 이용한 visualizer -->
         <div id="myDiagramDiv" style="background-color: rgb(240,240,240); border: 1px solid black; width:580px; height:490px ; display:none;"></div>
-        
+
         <br/>
         <!-- 코드의 출력값을 볼수 있는 코드미러 view -->
         <div id="print_view" style="display:none;">
@@ -219,16 +219,19 @@
 
     <!-- go.js -->
     <script src="static/js/go.js"></script>
+    <script src="static/js/go_init.js"></script>
 
     <!-- inner script -->
     <script type="text/javascript" charset="utf-8">
-        
+
       //vizualize 정보
       var jsonArray = [];
       // 전역변수 생성 순서 저장
       var global_order = [];
       // 스택 생성 순서 저장
       var stack_order = [];
+      // dict 타입 생성 순서 저장
+      var dict_order = [];
       // 각각의 객체에 할당된 주소의 개수 저장
       var overlap = {};
       //객체 생성 순서 저장 -> global_order가 가리키는 object key 순서대로 저장
@@ -247,11 +250,11 @@
           "animationManager.duration": 300
 //           "animationManager.isEnabled": false
         });
-        
+
       // go.js 의 노드, 링크 리스트
       var nodeDataArray = []
       var linkDataArray = []
-        
+
       //go.js node 색상 리스트
       var color_list = ["lightblue","#4CAE4C" ,"#F0AD4E" , "pink", "#5BC0DE", "lightcoral"]
       //color index
@@ -305,7 +308,7 @@
       cm_debug.on("beforeChange", singleLine); //코드미러 입력라인 1줄로 제한
       cm_debug.on("beforeChange", maxLength); //최대 입력값 제한
 
-        
+
 //       //codemirror text 정보 저장
 //       window.onbeforeunload = function() {
 //           console.log("새로고침")
@@ -314,7 +317,7 @@
 //           cm_editor.setValue(name);
 //           console.log(name)
 //       };
-        
+
       // 페이지 로딩 이후 작업
       $(document).ready(function() {
 
@@ -329,13 +332,13 @@
 
         /* visualize 버튼 입력시 서버로 요청 보내는 이벤트 */
         $('#visualize').on('click', function(e) {
-            
+
           showLoader();
-          
-          // 저장할 때  (또는 localStorage 사용)  // -> 브라우저에 값 저장 
+
+          // 저장할 때  (또는 localStorage 사용)  // -> 브라우저에 값 저장
           sessionStorage.setItem('saved_name', cm_editor.getValue());
           console.log("editor text save");
-            
+
           //결과창 초기화 및 view hide
           cm_printer.setValue("");
           //view 조정
@@ -438,7 +441,7 @@
             cm_debug.setValue("");
           }
         });
-          
+
         // 처음버튼
         $("#init_button").on('click', function(e) {
             step = 1;
@@ -448,19 +451,19 @@
             //breakpoint 설정
             linenum = jsonArray[0]['line'];
             setBreakPoint(linenum, "next")
-            
+
             //printer 설정
             cm_printer.setValue("")
             cm_printer.setCursor(cm_printer.lineCount(), 0);
-            
+
             //view 설정
             $("#current_step").text(step);
-            
+
             //gojs 초기화
             myDiagram.clear();
             return false;
         });
-          
+
         //visualize  이전 버튼
         $("#pre_button").on('click', function(e) {
           step = parseInt($("#current_step").text()) - 1
@@ -474,7 +477,7 @@
           cm_editor.clearGutter("breakpoints");
           //view 설정
           $("#current_step").text(step);
-          
+
           //event의 동작에 따라 다르게 작동
           if (event == "step_line") {
             if (step >= 2) {
@@ -491,24 +494,24 @@
             linenum = parseInt(jsonArray[step - 1]['line'])
             setBreakPoint(linenum, "current")
           }
-            
+
           //printer 설정
           cm_printer.setValue("")
           cm_printer.setValue(stdout);
           cm_printer.setCursor(cm_printer.lineCount(), 0);
-            
+
           if (step == 1){
               //gojs 초기화
               myDiagram.clear();
               return;
           }
-            
+
           object_order = []
           //Global, Object 시각화
           drawGlobalsObjectsNode(globals);
           //stack_locals 시각화
           drawStackLocalsNode(stack_locals); // stack_locals 가져와야해
-            
+
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
           //gojs 초기화
           myDiagram.requestUpdate();
@@ -536,7 +539,7 @@
           cm_editor.clearGutter("breakpoints");
           //view 설정
           $("#current_step").text(step + 1)
-            
+
           //event의 동작에 따라 breakpoint 다르게 작동
           if (event == "step_line") {
             if (step >= 1) {
@@ -555,28 +558,28 @@
             linenum = parseInt(jsonArray[step]['line'])
             setBreakPoint(linenum, "current")
           }
-          
+
           //printer 설정
           cm_printer.setValue("")
           cm_printer.setValue(stdout);
           cm_printer.setCursor(cm_printer.lineCount(), 0);
-            
+
           except_global_link = false
           // stack이 그려지면 global 링크들 모두 회색처리
           if(stack_locals.length != 0) except_global_link = true
-            
+
           object_order = []
           //Global, Object 시각화
           drawGlobalsObjectsNode(globals, except_global_link);
-          
-          //stack_locals 시각화 길이 0이면 안그림 
-          if(stack_locals.length != 0) {              
+
+          //stack_locals 시각화 길이 0이면 안그림
+          if(stack_locals.length != 0) {
               drawStackLocalsNode(stack_locals);
           }
-            
+
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
-            
-          myDiagram.requestUpdate();    
+
+          myDiagram.requestUpdate();
 //           myDiagram.currentCursor = "";
           return false;
         });
@@ -584,13 +587,13 @@
         $("#last_button").on('click', function(e) {
 
             step = parseInt($("#last_step").text());
-            
+
             globals = jsonArray[step-1]['_globals'];
             stdout = jsonArray[step-1]['stdout'];
 
             //breakpoint 초기화
             cm_editor.clearGutter("breakpoints");
-            
+
             //view 설정
             $("#current_step").text(step);
 
@@ -600,25 +603,25 @@
               linenum = parseInt(jsonArray[step - 1]['line'])
               setBreakPoint(linenum, "current")
             }
-            
+
             //printer 설정
             cm_printer.setValue("")
             cm_printer.setValue(stdout);
             cm_printer.setCursor(cm_printer.lineCount(), 0);
-            
+
             //Global, object 시각화
             drawGlobalsObjectsNode(globals);
 //             //stack_locals 시각화
-//             drawStackLocalsNode(stack_locals);            
-            myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);           
-            
+//             drawStackLocalsNode(stack_locals);
+            myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
+
             myDiagram.delayInitialization(); //애니메이션 딜레이 없앰
             myDiagram.requestUpdate();
-            
+
             return false;
 //               var dataUri = "data:application/json;charset=utf-8,"+ encodeURIComponent(myDiagram.model.toJSON());
 //             var link = $("#link").attr("href", dataUri);
-            
+
         });
 
         /* cm_editor (코드 수정 에디터) 수정시 pdb_view(pdb 명령어 입력창) 숨겨야 오류 방지 가능 */
@@ -689,7 +692,7 @@
               temp = JSON.parse(msg['data']);
               jsonArray = temp[0]
               console.log(jsonArray)
-              
+
               str = "";
               size = jsonArray.length - 1;
               exception = Object.keys(jsonArray[size]);
@@ -700,20 +703,21 @@
               $("#myDiagramDiv").hide();
               $("#viz_step_view").hide();
           }
-          else{  
+          else{
             temp = JSON.parse(msg['data']);
             jsonArray = temp[0]
             console.log(jsonArray);
-              
+
             // global_order, stack_order 초기화 -> 전역변수 , 스택 순서대로 그리기 위함
             global_order = [];
             stack_order = [];
-              
+            dict_order = [];
+
             //stack_parameter 초기화
             stack_parameter = [];
             //stack 파라미터 정보 저장
             getFunctionParameter();
-            
+
             // func 매개변수들 미리 stack_order에 추가!! ###################### 맞나?
             for(var i=0;i<stack_parameter.length;i++){
                 obj = stack_parameter[i];
@@ -721,22 +725,36 @@
                 name = name.split('(')[1]
                 name = name.split(')')[0]
                 stack = name.split(',')
-                
+
                 for(var j=0;j<stack.length;j++){
                     stack_order.push(stack[j]);
                 }
             }
             // 받은 데이터 순환하며 순서 조정
             for(var i=0; i<jsonArray.length;i++){
+                global_var = jsonArray[i]['_globals']
                 //dict를 배열로 만들어줌
-                global_key = Object.keys(jsonArray[i]['_globals']);
+                global_key = Object.keys(global_var);
                 for(var j=0;j<global_key.length;j++){
+                    key = global_key[j];
                     // global 선언된 변수를 순서 차례로 저장하는것!
-                    if(!global_order.includes(global_key[j])){
-                        global_order.push(global_key[j]);
+                    if(!global_order.includes(key)){
+                        global_order.push(key);
+                    }
+
+                    //dict 타입 생성 순서 저장
+                    // ex) global_var[key] = ["DICT",1,["key",value]]
+                    for(var k=0;k<global_var[key].length;k++){
+                      if(global_var[key][0] == "DICT"){
+                          if(k>=2){
+                            dict = global_var[key][k];
+                            if(!dict_order.includes(dict[0])){
+                                dict_order.push(dict[0]);
+                            }
+                          }
+                      }
                     }
                 }
-                
                 stack = jsonArray[i]['stack_locals']
 //                 console.log("stack_key")
 //                 console.log(stack_key)
@@ -751,12 +769,13 @@
                     }
                 }
             }
-
             console.log("global_order");
             console.log(global_order);
             console.log("stack_order")
             console.log(stack_order);
-            
+            console.log("dict_order");
+            console.log(dict_order);
+
             //view 설정
             $("#current_step").text("1")
             $("#last_step").text("" + jsonArray.length)
@@ -764,7 +783,7 @@
             setBreakPoint(linenum, "next")
 
             $("#myDiagramDiv").show();
-              
+
             //gojs 초기화 -> *필요?*
             myDiagram.clear();
 
@@ -887,194 +906,16 @@
           }
         }
 
-        //go.js 기본 설정 ############다른파일로*############다른파일로*############다른파일로*############다른파일로*############다른파일로*
-        function init() {
-
-          // 노드 디자인 + 기능
-          myDiagram.nodeTemplate =
-            $$(go.Node, "Auto", // the Shape will go around the TextBlock
-              {
-//                 fromSpot: go.Spot.RightSide, 
-//                 toSpot: go.Spot.LeftSide,
-              },
-              $$(go.Shape, "RoundedRectangle", {
-                  fill: "black", // the default fill, if there is no data bound value
-//                   portId: "", cursor: "pointer", // the Shape is the port, not the whole Node
-                  // allow all kinds of links from and to this port
-//                   fromLinkable: true,
-//                   toLinkable: true
-                },
-                // Shape.fill is bound to Node.data.color
-                new go.Binding("fill", "color")),
-              $$(go.TextBlock, {
-                  font: "bold 14px sans-serif",
-                  stroke: 'black',
-                  margin: 5, // make some extra space for the shape around the text
-                  isMultiline: false, // don't allow newlines in text
-                  // TextBlock.text is bound to Node.data.key
-                },
-                new go.Binding("text", "text"))
-            );
-
-          //링크 디자인 + 기능
-          myDiagram.linkTemplate =
-            $$(go.Link, {
-//                 routing: go.Link.Orthogonal,
-//                 routing: go.Link.AvoidsNodes,
-                curve: go.Link.Bezier,
-                fromSpot: go.Spot.RightSide, 
-                toSpot: go.Spot.LeftSide,
-                corner: 40
-//                 curve: go.Link.Bezier
-              }, // allow the user to relink existing links
-              $$(go.Shape, {
-                  strokeWidth: 1.5
-                },
-                new go.Binding("stroke", "color")),
-              $$(go.Shape, {
-                  toArrow: "Standard",
-                },
-                new go.Binding("fill", "color")),
-            );
-            
-             // 전역 변수 template
-             var globalGroupTemplate =
-                $$(go.Group, "Vertical",{
-                     avoidable: false,
-                     layerName: "Background"
-                 },
-                    $$(go.GridLayout, { wrappingColumn: 1 }),
-                       $$(go.TextBlock,
-                    {
-                      font: "bold 17px sans-serif",
-                      alignment: go.Spot.Left,
-                      isMultiline: false  // don't allow newlines in text
-                    },
-                    new go.Binding("text", "text").makeTwoWay(),
-                    new go.Binding("stroke", "color")),
-                     $$(go.Panel, "Auto",
-                        { name: "PANEL",
-//                           margin: new go.Margin(0, 30, 0, 0),
-                        },
-                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
-                      {
-                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 3,
-//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
-                      }),
-                    $$(go.Placeholder, { margin: 10, background: "transparent" })  // represents where the members are
-                  )
-                );
-                
-                // 객체 template
-                var objectGroupTemplate =
-                $$(go.Group, "Vertical",{
-                     avoidable: false,
-                     layerName: "Background"
-                 },
-                   $$(go.GridLayout, { 
-                        alignment: go.GridLayout.Center,
-//                         wrappingColumn: Infinity,
-                        cellSize: new go.Size(1, 1),
-                        spacing: new go.Size(4, 4)
-                    }),
-                       $$(go.TextBlock,
-                    {
-                      font: "bold 14px sans-serif",
-                      alignment: go.Spot.Left,
-                    },
-                    new go.Binding("text", "text").makeTwoWay(),
-                    new go.Binding("stroke", "color")),
-                     $$(go.Panel, "Auto",
-                        { name: "PANEL",
-                        },
-                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
-                      {
-                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 3,
-//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
-                      }),
-                    $$(go.Placeholder, { margin: 10, background: "transparent" })  // represents where the members are
-                  )
-                );
-            
-                // DICT 타입 template
-                var dictGroupTemplate =
-                $$(go.Group, "Vertical",{
-                     avoidable: false,
-                     layerName: "Background"
-                 },
-                   $$(go.GridLayout, { 
-                        alignment: go.GridLayout.Center,
-                        wrappingColumn: 1,
-                        cellSize: new go.Size(1, 1),
-                        spacing: new go.Size(1, 1)
-                    }),
-                       $$(go.TextBlock,
-                    {
-                      font: "bold 14px sans-serif",
-                      alignment: go.Spot.Left,
-                    },
-                    new go.Binding("text", "text").makeTwoWay(),
-                    new go.Binding("stroke", "color")),
-                     $$(go.Panel, "Auto",
-                        { name: "PANEL",
-                        },
-                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
-                      {
-                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 3,
-//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
-                      }),
-                    $$(go.Placeholder, { margin: 10, background: "transparent" })  // represents where the members are 
-                  )
-                );
-            
-                // DICT 타입 sub틀 template
-                var subdictGroupTemplate =
-                $$(go.Group, "Vertical",{
-                     avoidable: false,
-                     layerName: "Background"
-                 },
-                   $$(go.GridLayout, { 
-                        alignment: go.GridLayout.Center,
-//                         wrappingColumn: Infinity,
-                        cellSize: new go.Size(1, 1),
-                        spacing: new go.Size(1, 1)
-                    }),
-                     $$(go.Panel, "Auto",
-                        { name: "PANEL",
-                          margin: new go.Margin(5, 0, 0, 0),
-                        },
-                        $$(go.Shape, "RoundedRectangle",  // the rectangular shape around the members
-                      {
-                        fill: "rgba(128,128,128,0.2)", stroke: "gray", strokeWidth: 2,
-//                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
-                      }),
-                    $$(go.Placeholder, { margin: 5, background: "transparent" })  // represents where the members are 
-                  )
-                );
-            
-               //템플릿 맵 설정
-               var templmap = new go.Map();  
-
-              templmap.add("", globalGroupTemplate);
-              templmap.add("object", objectGroupTemplate);
-              templmap.add("dict", dictGroupTemplate);
-              templmap.add("subdict", subdictGroupTemplate);
-              // for the default category, "", use the same template that Diagrams use by default;
-
-              myDiagram.groupTemplateMap = templmap;
-
-        } // init
-        
         //global, object 그리는 함수
         //go.js 노드, 링크 데이터 채워 그리기 -> global <- 링크 -> object // -> 특정 위치에서
         function drawGlobalsObjectsNode(globals, except_link){
-          
+
           // 노드, 링크 초기화
           nodeDataArray = [];
           linkDataArray = [];
           // 색상 초기화
           color_index = 0;
-          
+
           if(global_order.length != 0 && global_order.length != undefined){
               //frames 생성
               dict = {};
@@ -1083,7 +924,7 @@
               dict["color"] = "black";
               dict["isGroup"] = true;
               nodeDataArray.push(dict);
-                
+
               //global frame 생성
               dict = {}
               dict["key"] = "전역변수";
@@ -1101,16 +942,16 @@
           tempLinkData = [];
           // object들의 주소를 담은 배열 -> 중복 검사하기위해
           object_ref = [];
-          // object의 생성 순서 
+          // object의 생성 순서
           object_order = [];
-            
+
           // 모든 경우에 globals 변수 검사 -> {x:[~~],:"~~", ...}
           //global_order의 변수 순서대로 for문 돌며 검사  ************************* 얘 덕분에 순서대로 해결
           global_order.forEach(function(key){
-              
+
               if(globals.hasOwnProperty(key)){
                   if(isPrimitive(globals[key])){
-                  
+
                       global = {};
                       global["key"] = ""+key;
                       global["text"] = key + " = " +globals[key];
@@ -1128,12 +969,12 @@
                       global["group"] = "전역변수";
                       color_index ++;
                       tempGlobalNode.push(global);
-                      
+
                       //전역 객체-> 변수 x가 가르키는 주소
                       object = {}
                       object["key"] = ""+globals[key][1]
-                      // 내부 데이터는 아래에서 
-                      
+                      // 내부 데이터는 아래에서
+
                       //전역 - 객체 링크
                       link = {}
                       link["from"] = global["key"];
@@ -1141,7 +982,7 @@
                       //stack을 그리면 link 색상 변경
                       if(except_link) link["color"] = "grey";
                       linkDataArray.push(link);
-                      
+
                       // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
                       // (x = [1,2,3] , y = x)인 경우에 해당되지
                       if (!object_ref.includes(object["key"])){
@@ -1151,21 +992,21 @@
                           //재귀로 반복하면서 전역 객체 생성
                           //컬러 반복 칠하기 위함
                           decode_type(globals[key], "객체", true);
-                     
+
                       }//if
                   }
               }// hasOwnProperty
             });
-            
+
             //전체 object 주소들 저장
             console.log("object_ref");
             console.log(object_ref);
-            
+
 //             //link global_order 순서대로 정렬 ##################################필요??
 //             for(var i=0;i<global_order.length;i++){
 //                 for(var j=0;j<tempLinkData.length;j++){
 //                     if(global_order[i] == tempLinkData[j]["from"]){
-                        
+
 //                     }
 //                 }
 //             }
@@ -1181,10 +1022,10 @@
                     overlap[overlap_key] += 1
                 }
             }
-            
+
             //중복된 주소 체크
             console.log(overlap)
-            
+
             // 그리는 순서 정리하기 !! *중요 1. global 생성 순서대로 nodeDataArray 정렬 2. global 생성 순서대로 object,linkDataArray 재 정렬
             // 호출된 global 변수 순서대로 저장 -> 순서는 global_order에 저장해둠
             for(var i=0;i<global_order.length;i++){
@@ -1195,10 +1036,10 @@
                        nodeDataArray.push(tempGlobalNode[j]);
                    }
                 }
-                
+
                 //2.
                 tmp_link = []
-                // global 변수가 포인팅하는 object 따로 저장 -> linkedList 잘 표현하기 위해서 
+                // global 변수가 포인팅하는 object 따로 저장 -> linkedList 잘 표현하기 위해서
                 for(var j=0;j<linkDataArray.length;j++){
                     //포인터가 아닐때 -> ex) x,y,i 등등
                     if(global_order[i] == linkDataArray[j]["from"]){
@@ -1209,32 +1050,33 @@
                     if(linkDataArray[j]["from"].includes('p')){
                         //p_( ) -> () 이 부분만 가져옴
                         check = linkDataArray[j]["from"].split("_")[1]
-                        
-                        // 지금까지 link 탄 모든 주소 저장해둔거 다시 확인해서 돔 
+
+                        // 지금까지 link 탄 모든 주소 저장해둔거 다시 확인해서 돔
                         //#######################################################but 지금 비효율 앞에있는 인덱스는 불필요하게 계속 돔
-                        for(var z=0;z<object_order.length;z++){   
+                        for(var z=0;z<object_order.length;z++){
                             tmp_link = object_order[z];
                             // check(from)와 이전 link (to)같으면 해당 인덱스의 "to" 부분 추가
                             if(tmp_link == check){
                                 link_to = linkDataArray[j]["to"]; // 다음 링크
                                 //차이가 1이라면 추가 아니면 재귀로 생성된게 아니기 때문에 그냥 pass!
                                 if(Math.abs(parseInt(tmp_link)-parseInt(link_to))!=1 && overlap[link_to] >= 2 ){ // ####얘도 좀 불안
-//                                     overlap[link_to]-=1 // 한번 지나쳤으니 -1
-                                    continue
+                                  // overlap[link_to]-=1 // 한번 지나쳤으니 -1
+                                  continue
                                 }
                                 else{
-                                    if(!object_order.includes(link_to)) object_order.push(link_to);
-                                    overlap[link_to]-=1 // 한번 지나쳤으니 -1
+                                  if(!object_order.includes(link_to)) object_order.push(link_to);
+                                  overlap[link_to]-=1 // 한번 지나쳤으니 -1
                                 }
+
                             }
                         }
                     }
                 }
             }
-            
+
             console.log("object_order");
             console.log(object_order);
-            
+
             // Object가 비었으면 Objectframe 생성 X
             if(tempObjectNode.length != 0){
                 //Object frame 생성
@@ -1260,29 +1102,29 @@
                     }
                 }
             }
-            
+
             console.log("nodeDataArray")
             console.log(nodeDataArray)
             console.log("linkDataArray")
             console.log(linkDataArray)
         }
-        
+
         // stack 변수 그리는 함수
         //stack 그리기 -> 특정 위치에서 line 1 , line 10 위치 등등
         function drawStackLocalsNode(stack_locals){
             console.log("stack_locals");
             console.log(stack_locals);
-            
+
             // drawglobals에도 있는 변수들 무조건 같은 이름 써야함
-            // 임시 globalNode 
+            // 임시 globalNode
 //             tempGlobalNode = [];
-            // 임시 objectNode 
+            // 임시 objectNode
             tempObjectNode = [];
-            
+
             //함수 이름
             for(var i=0;i<stack_locals.length;i++){
                 func_name = stack_locals[i][0] //함수이름
-                
+
                   //func stack 틀생성
                   dict = {};
                   dict["key"] = "stack_"+func_name;
@@ -1290,9 +1132,9 @@
                   dict["color"] = "black";
                   dict["group"] = "프레임"
                   dict["isGroup"] = true;
-                  nodeDataArray.push(dict);                  
+                  nodeDataArray.push(dict);
             }
-            
+
             //stack 생성 순서대로 검사 ###################################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
             for(var i=0;i<stack_order.length;i++){
                 // 여러가지 스택 함수들 검사
@@ -1312,7 +1154,7 @@
                               stack_global = {};
                               if(key == "__return__") stack_global["text"] = "Return = " +value;
                               else stack_global["text"] = key + " = " +value;
-                              
+
                               stack_global["key"] = "stack_"+key;
                               stack_global["color"] = color_list[color_index % color_list.length];
                               stack_global["group"] = "stack_"+func_name;
@@ -1328,18 +1170,18 @@
                               stack_global["group"] = "stack_"+func_name;
                               color_index ++;
                               nodeDataArray.push(stack_global);
-                      
+
                               //스택 객체-> 변수 h가 가르키는 주소
                               stack_object = {}
                               stack_object["key"] = ""+value[1]
-                              // 내부 데이터는 아래에서 
-                      
+                              // 내부 데이터는 아래에서
+
                               //스택 - 객체 링크
                               link = {}
                               link["from"] = stack_global["key"];
                               link["to"] = stack_object["key"];
                               linkDataArray.push(link);
-                      
+
 //                               // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
 //                               // (x = [1,2,3] , y = x)인 경우에 해당되지
                               if (!object_ref.includes(stack_object["key"])){
@@ -1348,14 +1190,14 @@
                                   // 전체 globals data , key의 주소
                                   //재귀로 반복하면서 전역 객체 생성
                                   decode_type(value, "스택", true);
-                     
+
                               }//if
                           }//else
                         }//hasOwnProperty
                     }//stack_locals
                 }
-            
-            
+
+
 
             // Object가 비었으면 Objectframe 생성 X
             if(tempObjectNode.length != 0){
@@ -1382,7 +1224,7 @@
                 }
             }
         }
-                        
+
         // 함수 파라미터 가져오기 -> func(a,b,c)
         function getFunctionParameter(){
             check_overlap = [];
@@ -1391,7 +1233,7 @@
                 if(event == "call"){
                        def_line = jsonArray[i]['line']
                        func_name = jsonArray[i]['func_name']
-                
+
                        //중복 확인 안 넣었으면 넣어줌
                        if(!check_overlap.includes(func_name)){
                            check_overlap.push(func_name);
@@ -1399,7 +1241,7 @@
                            code = code.replace('def ',"");
                            code = code.replace(':',"");
                            code = code.replace(/(\s*)/g,"")
-                           
+
                            dict = {}
                            dict[func_name] = code
                            stack_parameter.push(dict);
@@ -1408,23 +1250,25 @@
             }
             console.log("stack_parameter")
             console.log(stack_parameter)
-            
+
         }
-        
+
         // 라인 별 json 데이터 파싱
         // state = true -> 처음 생성 객체
         // state = false -> recursive로 생성된 객체
         // object -> object 링크
         function decode_type(data,group_key, state){
-            
+
             // 프리미티브이면 생성
             if(isPrimitive(data)){
                 //python에선 null -> None으로 표현
                 if(typeof(data)===typeof("")) data = "'"+data+"'";
                 if(data == null) data="None";
+                if(isDictType) text = data+" : ";
+                else text = ""+data
                 subObject = {}
                 subObject["key"] = "data_"+group_key+"_"+data;
-                subObject["text"] = ""+data;
+                subObject["text"] = text
                 subObject["color"] = color_list[color_index++ % color_list.length];
                 subObject["group"] = ""+group_key;
                 tempObjectNode.push(subObject);
@@ -1435,18 +1279,18 @@
                 //포인터 객체
                 tmpObject = {};
                 tmpObject["key"] = "p_"+group_key+"_"+data[1];
-                
+
                 //포인터 받는 객체
                 subObject = {};
                 subObject["key"] = ""+data[1];
-               
+
                 //포인터-> 객체로 링크 연결해줌 -> state=true 인경우 -> decode_type() 첫 선언시 -> 링크 안검 -> 객체 생성만
                 if(!state){
                     tmpObject["text"] = "*";
                     tmpObject["color"] = color_list[color_index % color_list.length];
                     tmpObject["group"] = ""+group_key;
                     tempObjectNode.push(tmpObject);
-                    
+
                     //전역 - 객체 링크
                     link = {}
                     link["from"] = tmpObject["key"];
@@ -1454,10 +1298,10 @@
                     linkDataArray.push(link);
                 }
 
-                //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만 
+                //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만
                 if (!object_ref.includes(subObject["key"])){
                       object_ref.push(subObject["key"]);
-                
+
                 // 객체 생성 2단계
                 //1. compound 타입인게 확정났으니 그룹(새로 생성될 객체) 하나 만들어줘야함!
                 subObject["text"] = ""+data[0];
@@ -1466,11 +1310,11 @@
                 if(data[0] != "DICT") subObject["category"] = "object";
                 else subObject["category"] = "dict";
                 tempObjectNode.push(subObject);
-                
+
                 //2. 해당 object 값안에서 재귀로 계속 object 생성
                 for(var index in data){
                     if(index >= 2){
-                              
+
                         if(data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET"){
                             value = data[index];
                             decode_type(value, data[1], false);
@@ -1478,30 +1322,33 @@
                         else if(data[0] == "DICT"){
                             key = data[index][0]
                             value = data[index][1]
-                            
-                            dict = {};
-                            dict["key"] = "dict_"+ group_key +"_"+ key +":"+value;
-                            dict["color"] = "black"
-                            dict["group"] = data[1];
-                            dict["isGroup"] = true;
-                            dict["category"] = "subdict";
-                            tempObjectNode.push(dict);
-                            
+
+                            subdict = {};
+                            subdict["key"] = data[1] +"_"+ key;
+                            subdict["color"] = "black"
+                            subdict["group"] = ""+data[1];
+                            subdict["isGroup"] = true;
+                            subdict["category"] = "subdict";
+                            tempObjectNode.push(subdict);
+
                             if(isPrimitive(value)){
                                 //python에선 null -> None으로 표현
                                 if(typeof(value)===typeof("")) value = "'"+value+"'";
                                 if(value == null) value="None";
+                                text = "'"+key +"' : "+ value;
                                 subObject = {}
-                                subObject["key"] = "data_"+group_key+"_"+value;
-                                subObject["text"] = "'"+key +"' : "+ value;
+                                subObject["key"] = "data_"+group_key+"_"+key;
+                                subObject["text"] = text;
                                 subObject["color"] = color_list[color_index % color_list.length];
-                                subObject["group"] = dict["key"];
+                                subObject["group"] = subdict["key"];
                                 tempObjectNode.push(subObject);
                                 return;
                             }
                             else{
-                                decode_type(key, dict["key"], true); //key는 compound type이 될수 없으니 
-                                decode_type(value, dict["key"], false);
+                                isDictType = true
+                                decode_type(key, subdict["key"], true); //key는 compound type이 될수 없으니
+                                isDictType = false
+                                decode_type(value, subdict["key"], false);
                             }
                         }
                         //함수 일때
@@ -1509,9 +1356,9 @@
                             isFind = false;
                             // <function func ........> 중 func 를 가져오는 과정 -> import들은 '' 달고옴
                             func_name = data[2].split(' ')[1]
-                            if(data[0] == "module") {func_name = func_name.match(/\'{1}(.*){1}\'{1}/)[1]} ////////불안하다잉    
+                            if(data[0] == "module") {func_name = func_name.match(/\'{1}(.*){1}\'{1}/)[1]} ////////불안하다잉
                             //next_button  클릭시 getStackLocalsParameter 로 저장된 parameter list
-                            for(var i=0;i<stack_parameter.length;i++){ 
+                            for(var i=0;i<stack_parameter.length;i++){
                                 //key -> global['key'] -> 함수이름
                                 if(stack_parameter[i][func_name]!=null || stack_parameter[i][func_name]!=undefined){
                                     value = stack_parameter[i][func_name];
@@ -1534,14 +1381,14 @@
         function isPrimitive(test) {
           return (test !== Object(test));
         };
-          
+
         //1_1234 형태에서 앞 쪽 기준 오름차순
         function sortAsc(a, b) {
             // a에서 b를 뺀 결과가 음수면 a가 b보다 작고, 0이면 같다.
             // sort메소드는 return 값이 음수,양수,0인지에 따라서 순서를 정한다.
             array1 = a.split("_")
             array2 = b.split("_")
-            
+
             return array1[0] - array2[0];
         };
         //1_1234 형태에서 뒤 쪽 기준 내림차순
@@ -1550,8 +1397,8 @@
             // sort메소드는 return 값이 음수,양수,0인지에 따라서 순서를 정한다.
             array1 = a.split("_")
             array2 = b.split("_")
-            
-            
+
+
             return array2[1] - array1[1];
         };
           //1_1234 형태에서 앞 쪽 기준 오름차순
@@ -1560,7 +1407,7 @@
             // sort메소드는 return 값이 음수,양수,0인지에 따라서 순서를 정한다
             array1 = a.split("_")
             array2 = b.split("_")
-            
+
             return array1[1] - array2[1];
         };
 //         //스크롤 block
