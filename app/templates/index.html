@@ -947,10 +947,8 @@
           // object의 생성 순서
           object_order = [];
 
-          //dict 생성 순
+          //dict 생성
           dict_ref = [];
-
-
           // 모든 경우에 globals 변수 검사 -> {x:[~~],:"~~", ...}
           //global_order의 변수 순서대로 for문 돌며 검사  ************************* 얘 덕분에 순서대로 해결
           global_order.forEach(function(key) {
@@ -1006,6 +1004,8 @@
           //전체 object 주소들 저장
           console.log("object_ref");
           console.log(object_ref);
+          console.log("dict_ref");
+          console.log(dict_ref);
 
           //             //link global_order 순서대로 정렬 ##################################필요??
           //             for(var i=0;i<global_order.length;i++){
@@ -1098,21 +1098,24 @@
                 }
               }
             }
+            token_list = []
             //dict_order 순서대로 저장
             for(var i = 0;i < dict_order.length;i++){
               for(var j = 0;j< tempObjectNode.length;j++){
                 if(tempObjectNode[j]['category'] == "subdict"){
-                  console.log("dict_order[i]");
-                  console.log(dict_order[i]);
-                  if(tempObjectNode[j]['key'].includes(dict_order[i])){
+                  token = tempObjectNode[j]['key'].split("_")[1]
+                  if(token == dict_order[i]){
+                    token_list.push(tempObjectNode[j]['key']);
                     nodeDataArray.push(tempObjectNode[j]);
                   }
                 }
               }
             }
-            // 나머지 tempObject -> nodeDataArray에 저장 ############################################## 주의
+
+            //나머지 tempObject -> nodeDataArray에 저장 ############################################## 주의
             for (var j = 0; j < tempObjectNode.length; j++) {
-              if (!object_order.includes(tempObjectNode[j]['key']) && !dict_order.includes(tempObjectNode[j]['key'])) {
+              console.log(tempObjectNode[j]['key']);
+              if (!object_order.includes(tempObjectNode[j]['key']) && !token_list.includes(tempObjectNode[j]['key'])) {
                 nodeDataArray.push(tempObjectNode[j]);
               }
             }
@@ -1324,12 +1327,7 @@
               else subObject["category"] = "dict";
               tempObjectNode.push(subObject);
 
-              if(data[0] == "DICT"){
 
-                for(var index in data){
-
-                }
-              }
               //2. 해당 object 값안에서 재귀로 계속 object 생성
               for (var index in data) {
                 if (index >= 2) {
@@ -1344,6 +1342,8 @@
 
                     subdict = {};
                     subdict["key"] = data[1] + "_" + key;
+                    if(!dict_ref.includes(subdict["key"])){
+                      dict_ref.push(subdict["key"])
                     subdict["color"] = "black"
                     subdict["group"] = "" + data[1];
                     subdict["isGroup"] = true;
@@ -1356,7 +1356,7 @@
                       if (value == null) value = "None";
                       text = "'" + key + "' : " + value;
                       subObject = {}
-                      subObject["key"] = "data_" + group_key + "_" + key;
+                      subObject["key"] = "data_" + subdict["key"] + "_" + key;
                       subObject["text"] = text;
                       subObject["color"] = color_list[color_index % color_list.length];
                       subObject["group"] = subdict["key"];
@@ -1391,6 +1391,7 @@
                     decode_type(value, data[1], false);
                   } //else
                 } // >=2
+              }
               } //for
             } //!object_ref
           } //else
