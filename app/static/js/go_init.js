@@ -1,10 +1,11 @@
-        //go.js 기본 설정
+//go.js 기본 설정
         function init() {
 
           // 노드 디자인 + 기능
           myDiagram.nodeTemplate =
             $$(go.Node, "Auto", // the Shape will go around the TextBlock
               {
+                  click: function(e, node) { showConnections(node); }  // defined below
                   // fromSpot: go.Spot.RightSide,
                   // toSpot: go.Spot.LeftSide,
               },
@@ -39,13 +40,17 @@
                 //                 curve: go.Link.Bezier
               }, // allow the user to relink existing links
               $$(go.Shape, {
-                  strokeWidth: 1.5
+                  isPanelMain: true, stroke: "black", strokeWidth: 1.5
                 },
-                new go.Binding("stroke", "color")),
+                new go.Binding("stroke", "color"),
+                // Link.isHighlighted is true 이면 "stroke"를 "red"로 변경
+                new go.Binding("stroke", "isHighlighted", function(h) { return h ? "red" : "black"; }).ofObject()),
               $$(go.Shape, {
-                  toArrow: "Standard",
+                  toArrow: "standard", stroke: null, strokeWidth: 0
                 },
-                new go.Binding("fill", "color"))
+                new go.Binding("fill", "color"),
+                // Link.isHighlighted is true 이면 "fill"을 "red"로 변경
+                new go.Binding("fill", "isHighlighted", function(h) { return h ? "red" : "black"; }).ofObject())
             );
 
           // 전역 변수 template
@@ -109,7 +114,8 @@
                     stroke: "gray",
                     strokeWidth: 3,
                     //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
-                  }),
+                  },
+                  new go.Binding("stroke", "isHighlighted", function(h) { return h ? "red" : "gray"; }).ofObject()),
                 $$(go.Placeholder, {
                   margin: 10,
                   background: "transparent"
@@ -192,5 +198,21 @@
           // for the default category, "", use the same template that Diagrams use by default;
 
           myDiagram.groupTemplateMap = templmap;
+        }
 
-        } // init
+        // 클릭한 노드의 연결된 모든 노드,링크 하이라이트 설정
+        function showConnections(node) {
+          var diagram = node.diagram;
+          diagram.startTransaction("highlight");
+          // 모든 하이라이트 제거하고
+          diagram.clearHighlighteds();
+          // 나가는 모든 링크 하이라이트
+          node.findLinksOutOf().each(function(l) {
+            l.isHighlighted = true;
+          });
+          // 나가는 모든 노드 하이라이트
+          node.findNodesOutOf().each(function(n) {
+            n.isHighlighted = true;
+          });
+          diagram.commitTransaction("highlight");
+        }

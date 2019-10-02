@@ -262,19 +262,27 @@
         {
           "undoManager.isEnabled": true, // enable undo & redo
           // initialScale: 0.8,
-          // initialAutoScale: go.Diagram.UniformToFill, //개쩐다
-          // initialDocumentSpot: go.Spot.TopCenter,
-          // initialViewportSpot: go.Spot.TopCenter,
+          // initialAutoScale: go.Diagram.Uniform, //개쩐다
+          // initialDocumentSpot: go.Spot.Center,
+          // initialViewportSpot: go.Spot.Center,
           "animationManager.duration": 300,
           //           "animationManager.isEnabled": false
           // allowHorizontalScroll: false,
           // allowVerticalScroll: false
         });
-      // myDiagram.scale = 0.8;
+      myDiagram.scale = 0.7;
+      myDiagram.minScale = 0.7;
       myDiagram.autoScale=go.Diagram.UniformToFill;
       myDiagram.contentAlignment = go.Spot.Center;
       myDiagram.scrollMode = go.Diagram.InfiniteScroll;
       // myDiagram.model.isReadOnly = true;
+
+      // 사용자가 background 클릭하면 모든 하이라이트 제거
+      myDiagram.click = function(e) {
+        myDiagram.startTransaction("no highlighteds");
+        myDiagram.clearHighlighteds();
+        myDiagram.commitTransaction("no highlighteds");
+      };
 
       /* 코드미러 설정 부분 */
       var editor = document.getElementById('editor');
