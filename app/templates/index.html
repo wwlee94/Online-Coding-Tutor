@@ -270,6 +270,7 @@
           // allowHorizontalScroll: false,
           // allowVerticalScroll: false
         });
+      // myDiagram.scale = 0.8;
       myDiagram.autoScale=go.Diagram.UniformToFill;
       myDiagram.contentAlignment = go.Spot.Center;
       myDiagram.scrollMode = go.Diagram.InfiniteScroll;
@@ -587,9 +588,7 @@
           if (stack_locals.length != 0) {
             drawStackLocalsNode(stack_locals);
           }
-
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
-
           myDiagram.requestUpdate();
           //           myDiagram.currentCursor = "";
           return false;
