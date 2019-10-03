@@ -270,9 +270,9 @@
           // allowHorizontalScroll: false,
           // allowVerticalScroll: false
         });
-      myDiagram.scale = 0.7;
-      myDiagram.minScale = 0.7;
-      myDiagram.autoScale=go.Diagram.UniformToFill;
+      myDiagram.scale = 0.8;
+      myDiagram.minScale = 0.8;
+      myDiagram.autoScale = go.Diagram.Uniform;
       myDiagram.contentAlignment = go.Spot.Center;
       myDiagram.scrollMode = go.Diagram.InfiniteScroll;
       myDiagram.isReadOnly = true; // 수정 불가
@@ -285,9 +285,9 @@
       };
 
       // create the Overview and initialize it to show the main Diagram
-    // var myOverview =
-    //   $(go.Overview, "myOverviewDiv",
-    //     { observed: diagram });
+      // var myOverview =
+      //   $(go.Overview, "myOverviewDiv",
+      //     { observed: diagram });
 
       /* 코드미러 설정 부분 */
       var editor = document.getElementById('editor');
@@ -1011,12 +1011,16 @@
                 // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
                 // (x = [1,2,3] , y = x)인 경우에 해당되지
                 if (!object_ref.includes(object["key"])) {
-
+                  object_panel = {}
+                  object_panel["key"] = "panel_" + key;
+                  object_panel["group"] = "객체";
+                  object_panel["isGroup"] = true;
+                  object_panel["category"] = "object_panel";
+                  nodeDataArray.push(object_panel);
                   //recursive draw
-                  // 전체 globals data , key의 주소
-                  //재귀로 반복하면서 전역 객체 생성
-                  //컬러 반복 칠하기 위함
-                  decode_type(globals[key], "객체", true);
+                  //재귀로 반복하면서 전역변수 객체변수 생성
+                  // 데이터 값(primitive or compound) , group_key(재귀로 돌면서 자기 위 부모 참조) , 기준이 될 panel(맨위 부모), 첫 생성인지 아닌지 여부
+                  decode_type(globals[key], object_panel["key"], object_panel["key"], true);
 
                 } //if
               }
@@ -1108,7 +1112,6 @@
             dict["text"] = "객체";
             dict["color"] = "black"
             dict["isGroup"] = true;
-            dict["category"] = "object";
             nodeDataArray.push(dict);
 
             //#########################################동작은 하는데 매우 비효율적인듯..?
@@ -1123,12 +1126,12 @@
             // dict_order 순서에 맞게 구한 후 tempObjectNode와 비교할 문자열 넣은리스트
             token_list = []
             //dict_order 순서대로 저장
-            for(var i = 0;i < dict_order.length;i++){
-              for(var j = 0;j< tempObjectNode.length;j++){
+            for (var i = 0; i < dict_order.length; i++) {
+              for (var j = 0; j < tempObjectNode.length; j++) {
                 // subdict부분만 조정하면 됨
-                if(tempObjectNode[j]['category'] == "subdict"){
-                  token = tempObjectNode[j]['key'].split("_")[1]
-                  if(token == dict_order[i]){
+                if (tempObjectNode[j]['category'] == "subdict") {
+                  token = tempObjectNode[j]['key'].split("_")[1] // dict_order와 비교할것 추출
+                  if (token == dict_order[i]) {
                     token_list.push(tempObjectNode[j]['key']);
                     nodeDataArray.push(tempObjectNode[j]);
                   }
@@ -1143,7 +1146,6 @@
               }
             }
           }
-
           console.log("nodeDataArray")
           console.log(nodeDataArray)
           console.log("linkDataArray")
@@ -1227,7 +1229,7 @@
                     //recursive draw
                     // 전체 globals data , key의 주소
                     //재귀로 반복하면서 전역 객체 생성
-                    decode_type(value, "스택", true);
+                    decode_type(value, "스택", "객체", true);
 
                   } //if
                 } //else
@@ -1295,7 +1297,7 @@
         // state = true -> 처음 생성 객체
         // state = false -> recursive로 생성된 객체
         // object -> object 링크
-        function decode_type(data, group_key, state) {
+        function decode_type(data, group_key, parent_group, state) {
 
           // 프리미티브이면 생성
           if (isPrimitive(data)) {
@@ -1307,8 +1309,7 @@
             if (isDictType) {
               text = data + " : ";
               data = ""
-            }
-            else text = "" + data
+            } else text = "" + data
             subObject = {}
             subObject["key"] = "data_" + group_key + "_" + data;
             subObject["text"] = text
@@ -1347,23 +1348,21 @@
               // 객체 생성 2단계
               //1. compound 타입인게 확정났으니 그룹(새로 생성될 객체) 하나 만들어줘야함!
               subObject["text"] = "" + data[0];
-              subObject["group"] = "객체";
+              subObject["group"] = "" + parent_group;
               subObject["isGroup"] = true
               if (data[0] != "DICT") subObject["category"] = "object";
               else subObject["category"] = "dict";
-              subObject["loc"] = "20 20";
               tempObjectNode.push(subObject);
 
 
               //2. 해당 object 값안에서 재귀로 계속 object 생성
               for (var index in data) {
                 if (index >= 2) {
-
+                  //타입 분류
                   if (data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET") {
                     value = data[index];
-                    decode_type(value, data[1], false);
-                  }
-                  else if (data[0] == "DICT") {
+                    decode_type(value, data[1], parent_group, false);
+                  } else if (data[0] == "DICT") {
 
                     key = data[index][0]
                     value = data[index][1]
@@ -1372,7 +1371,7 @@
                     subdict["key"] = data[1] + "_" + key;
 
                     // 데이터가 중복으로 들어가지 않도록
-                    if(!dict_ref.includes(subdict["key"])){
+                    if (!dict_ref.includes(subdict["key"])) {
                       dict_ref.push(subdict["key"])
                       subdict["color"] = "black"
                       subdict["group"] = "" + data[1];
@@ -1380,26 +1379,26 @@
                       subdict["category"] = "subdict";
                       tempObjectNode.push(subdict);
 
-                    if (isPrimitive(value)) {
-                      //python에선 null -> None으로 표현
-                      if (typeof(value) === typeof("")) value = "'" + value + "'";
-                      if (value == null) value = "None";
-                      text = "'" + key + "' : " + value;
-                      subObject = {}
-                      subObject["key"] = "data_" + subdict["key"];
-                      subObject["text"] = text;
-                      subObject["color"] = color_list[color_index % color_list.length];
-                      subObject["group"] = subdict["key"];
-                      tempObjectNode.push(subObject);
-                    } else {
-                      //true이면 "'key' : ??" 형태로 출력하기 위함
-                      isDictType = true
-                      decode_type(key, subdict["key"], true); //key는 compound type이 될수 없으니 링크없이
-                      isDictType = false
-                      decode_type(value, subdict["key"], false);
+                      if (isPrimitive(value)) {
+                        //python에선 null -> None으로 표현
+                        if (typeof(value) === typeof("")) value = "'" + value + "'";
+                        if (value == null) value = "None";
+                        text = "'" + key + "' : " + value;
+                        subObject = {}
+                        subObject["key"] = "data_" + subdict["key"];
+                        subObject["text"] = text;
+                        subObject["color"] = color_list[color_index % color_list.length];
+                        subObject["group"] = subdict["key"];
+                        tempObjectNode.push(subObject);
+                      } else {
+                        //true이면 "'key' : ??" 형태로 출력하기 위함
+                        isDictType = true
+                        decode_type(key, subdict["key"], parent_group, true); //key는 compound type이 될수 없으니 링크없이
+                        isDictType = false
+                        decode_type(value, subdict["key"], parent_group, false);
+                      }
                     }
                   }
-                }
                   //함수 일때
                   else {
                     isFind = false;
@@ -1420,7 +1419,7 @@
                     if (!isFind) {
                       value = func_name + "()";
                     }
-                    decode_type(value, data[1], false);
+                    decode_type(value, data[1], parent_group, false);
                   } //else
                 } // >=2
               } //for
