@@ -223,7 +223,7 @@
 
     <!-- go.js -->
     <script src="static/js/go.js"></script>
-    <script src="static/js/go_init.js"></script>
+    <script src="static/js/go_init.js?ver=1"></script>
 
     <!-- inner script -->
     <script type="text/javascript" charset="utf-8">
@@ -275,7 +275,7 @@
       myDiagram.autoScale=go.Diagram.UniformToFill;
       myDiagram.contentAlignment = go.Spot.Center;
       myDiagram.scrollMode = go.Diagram.InfiniteScroll;
-      // myDiagram.model.isReadOnly = true;
+      myDiagram.isReadOnly = true; // 수정 불가
 
       // 사용자가 background 클릭하면 모든 하이라이트 제거
       myDiagram.click = function(e) {
@@ -283,6 +283,11 @@
         myDiagram.clearHighlighteds();
         myDiagram.commitTransaction("no highlighteds");
       };
+
+      // create the Overview and initialize it to show the main Diagram
+    // var myOverview =
+    //   $(go.Overview, "myOverviewDiv",
+    //     { observed: diagram });
 
       /* 코드미러 설정 부분 */
       var editor = document.getElementById('editor');
@@ -1346,6 +1351,7 @@
               subObject["isGroup"] = true
               if (data[0] != "DICT") subObject["category"] = "object";
               else subObject["category"] = "dict";
+              subObject["loc"] = "20 20";
               tempObjectNode.push(subObject);
 
 

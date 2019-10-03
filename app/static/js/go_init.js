@@ -1,5 +1,53 @@
 //go.js 기본 설정
         function init() {
+//           function CascadeLayout() {
+//   go.Layout.call(this);
+//   this._offset = new go.Size(12, 12);
+// }
+// go.Diagram.inherit(CascadeLayout, go.Layout);
+//
+// CascadeLayout.prototype.cloneProtected = function(copy) {
+//   go.Layout.prototype.cloneProtected.call(this, copy);
+//   copy._offset = this._offset;
+// };
+//
+// Object.defineProperty(CascadeLayout.prototype, "offset", {
+//   get: function() { return this._offset; },
+//   set: function(val) {
+//     if (!(val instanceof go.Size)) {
+//       throw new Error("new value for CascadeLayout.offset must be a Size, not: " + val);
+//     }
+//     if (!this._offset.equals(val)) {
+//       this._offset = val;
+//       this.invalidateLayout();
+//     }
+//   }
+// });
+//
+// /**
+// * This method positions all Nodes and ignores all Links.
+// * @this {CascadeLayout}
+// * @param {Diagram|Group|Iterable} coll the collection of Parts to layout.
+// */
+// CascadeLayout.prototype.doLayout = function(coll) {
+//   // get the Nodes and Links to be laid out
+//   var parts = this.collectParts(coll);
+//
+//   // Start the layout at the arrangement origin, a property inherited from Layout
+//   var x = this.arrangementOrigin.x;
+//   var y = this.arrangementOrigin.y;
+//   var offset = this.offset;
+//
+//   var it = parts.iterator;
+//   while (it.next()) {
+//     var node = it.value;
+//     if (!(node instanceof go.Node)) continue;  // ignore Links
+//     node.move(new go.Point(x, y));
+//     x += offset.width;
+//     y += offset.height;
+//   }
+// };
+// // end of CascadeLayout
 
           // 노드 디자인 + 기능
           myDiagram.nodeTemplate =
@@ -63,7 +111,7 @@
                 wrappingColumn: 1
               }),
               $$(go.TextBlock, {
-                  font: "bold 17px sans-serif",
+                  font: "bold 16px sans-serif",
                   alignment: go.Spot.Left,
                   isMultiline: false // don't allow newlines in text
                 },
@@ -75,9 +123,9 @@
                 },
                 $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
                   {
-                    fill: "rgba(128,128,128,0.2)",
-                    stroke: "gray",
-                    strokeWidth: 3,
+                    fill: "rgba(128, 128, 64, 0.4)",
+                    stroke: "black",
+                    strokeWidth: 2,
                     //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
                   }),
                 $$(go.Placeholder, {
@@ -110,12 +158,12 @@
                 },
                 $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
                   {
-                    fill: "rgba(128,128,128,0.2)",
-                    stroke: "gray",
-                    strokeWidth: 3,
+                    fill: "rgba(128, 128, 64, 0.4)",
+                    stroke: "black",
+                    strokeWidth: 2,
                     //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
                   },
-                  new go.Binding("stroke", "isHighlighted", function(h) { return h ? "red" : "gray"; }).ofObject()),
+                  new go.Binding("stroke", "isHighlighted", function(h) { return h ? "red" : "black"; }).ofObject()),
                 $$(go.Placeholder, {
                   margin: 10,
                   background: "transparent"
@@ -146,10 +194,10 @@
                 },
                 $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
                   {
-                    fill: "rgba(128,128,128,0.2)",
-                    stroke: "gray",
-                    strokeWidth: 3,
-                    //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
+                    fill: "rgba(128, 128, 64, 0.4)",
+                    stroke: "black",
+                    strokeWidth: 2,
+                    // //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
                   }),
                 $$(go.Placeholder, {
                   margin: 10,
@@ -176,9 +224,9 @@
                 },
                 $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
                   {
-                    fill: "rgba(128,128,128,0.2)",
-                    stroke: "gray",
-                    strokeWidth: 2,
+                    fill: "rgba(128, 128, 64, 0.4)",
+                    stroke: "black",
+                    strokeWidth: 1.5,
                     //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
                   }),
                 $$(go.Placeholder, {
