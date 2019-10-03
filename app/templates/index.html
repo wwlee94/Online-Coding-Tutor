@@ -223,7 +223,7 @@
 
     <!-- go.js -->
     <script src="static/js/go.js"></script>
-    <script src="static/js/go_init.js?ver=1"></script>
+    <script src="static/js/go_init.js?ver=2"></script>
 
     <!-- inner script -->
     <script type="text/javascript" charset="utf-8">
@@ -498,7 +498,9 @@
 
           event = jsonArray[step - 1]['event'];
           globals = jsonArray[step - 1]['_globals'];
+          stack_locals = jsonArray[step -1]['stack_locals'];
           stdout = jsonArray[step - 1]['stdout'];
+
 
           //breakpoint 초기화
           cm_editor.clearGutter("breakpoints");
@@ -536,7 +538,7 @@
           //Global, Object 시각화
           drawGlobalsObjectsNode(globals);
           //stack_locals 시각화
-          drawStackLocalsNode(stack_locals); // stack_locals 가져와야해
+          if (stack_locals.length != 0) drawStackLocalsNode(stack_locals);
 
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
           //gojs 초기화
@@ -598,9 +600,8 @@
           drawGlobalsObjectsNode(globals, except_global_link);
 
           //stack_locals 시각화 길이 0이면 안그림
-          if (stack_locals.length != 0) {
-            drawStackLocalsNode(stack_locals);
-          }
+          if (stack_locals.length != 0) drawStackLocalsNode(stack_locals);
+
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
           myDiagram.requestUpdate();
           //           myDiagram.currentCursor = "";
@@ -752,7 +753,7 @@
                 stack_order.push(stack[j]);
               }
             }
-            // 받은 데이터 순환하며 순서 조정
+            // 받은 JSON 데이터 순환하며 순서 조정
             for (var i = 0; i < jsonArray.length; i++) {
               global_var = jsonArray[i]['_globals']
               //딕셔너리를 배열로 만들어줌
@@ -971,6 +972,16 @@
           //dict 생성
           dict_ref = [];
 
+          //각 global변수(compound 타입 일경우) 처음 가리키는 주소 담은 배열
+          global_first_ref = [];
+          global_order.forEach(function(key){
+            if(!isPrimitive(globals[key])) global_first_ref.push(globals[key][1]);
+          });
+          console.log("global_first_ref");
+          console.log(global_first_ref);
+
+          //위의 global_first_ref를 참조할 index
+          global_index = 0;
           // 모든 경우에 globals 변수 검사 -> {x:[~~],:"~~", ...}
           //global_order의 변수 순서대로 for문 돌며 검사  ************************* 얘 덕분에 순서대로 해결
           global_order.forEach(function(key) {
@@ -1016,12 +1027,15 @@
                   object_panel["group"] = "객체";
                   object_panel["isGroup"] = true;
                   object_panel["category"] = "object_panel";
+                  // if(globals[key][0] == "DICT") object_panel["column"] = "2";
                   nodeDataArray.push(object_panel);
+
                   //recursive draw
                   //재귀로 반복하면서 전역변수 객체변수 생성
-                  // 데이터 값(primitive or compound) , group_key(재귀로 돌면서 자기 위 부모 참조) , 기준이 될 panel(맨위 부모), 첫 생성인지 아닌지 여부
+                  // 데이터 값(primitive or compound) , group_key(재귀로 돌면서 자기 위 부모 참조) , 기준이 될 panel(루트 그룹), 첫 생성인지 아닌지 여부
                   decode_type(globals[key], object_panel["key"], object_panel["key"], true);
 
+                  global_index ++;
                 } //if
               }
             } // hasOwnProperty
@@ -1031,15 +1045,8 @@
           //전체 object 주소들 저장
           console.log("object_ref");
           console.log(object_ref);
-          //             //link global_order 순서대로 정렬 ##################################필요??
-          //             for(var i=0;i<global_order.length;i++){
-          //                 for(var j=0;j<tempLinkData.length;j++){
-          //                     if(global_order[i] == tempLinkData[j]["from"]){
 
-          //                     }
-          //                 }
-          //             }
-          //################################################################################ *link, node 순서 바꾸는 작업 필요?*
+          //############################################### *link, node 순서 바꾸는 작업 필요?*
           overlap = {}
           //object가 받는 링크의 개수 체크 -> 링크 2개를 받고 재귀로 생성되지 않는 애는 나중에 그림
           for (var i = 0; i < linkDataArray.length; i++) {
@@ -1112,6 +1119,7 @@
             dict["text"] = "객체";
             dict["color"] = "black"
             dict["isGroup"] = true;
+            // dict["category"] = "dict";
             nodeDataArray.push(dict);
 
             //#########################################동작은 하는데 매우 비효율적인듯..?
@@ -1222,8 +1230,8 @@
                   link["to"] = stack_object["key"];
                   linkDataArray.push(link);
 
-                  //                               // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
-                  //                               // (x = [1,2,3] , y = x)인 경우에 해당되지
+                  // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
+                  //  (x = [1,2,3] , y = x)인 경우에 해당되지
                   if (!object_ref.includes(stack_object["key"])) {
 
                     //recursive draw
@@ -1297,7 +1305,7 @@
         // state = true -> 처음 생성 객체
         // state = false -> recursive로 생성된 객체
         // object -> object 링크
-        function decode_type(data, group_key, parent_group, state) {
+        function decode_type(data, group_key, root_group, state) {
 
           // 프리미티브이면 생성
           if (isPrimitive(data)) {
@@ -1310,6 +1318,8 @@
               text = data + " : ";
               data = ""
             } else text = "" + data
+
+            //primitive 객체 생성
             subObject = {}
             subObject["key"] = "data_" + group_key + "_" + data;
             subObject["text"] = text
@@ -1341,6 +1351,21 @@
               linkDataArray.push(link);
             }
 
+            // linkedList구조에서 link 조작시 panel 별로 잘 매칭할 수 있도록
+            if(object_ref.length>=1){
+              // console.log("마지막 object_ref");
+              // console.log(parseInt(object_ref[object_ref.length-1]));
+              // console.log("현재 주소");
+              // console.log(parseInt(data[1]));
+              //각 전역변수가(compound 타입 일경우) 처음 가리키는 주소 담은 배열
+              if(Math.abs(parseInt(object_ref[object_ref.length-1]) - parseInt(data[1])) != 1) {
+                  if(global_first_ref[global_index] != data[1]){
+                    console.log("패스해야할 부분");
+                    return;
+                  }
+              }
+            }
+
             //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만
             if (!object_ref.includes(subObject["key"])) {
               object_ref.push(subObject["key"]);
@@ -1348,7 +1373,7 @@
               // 객체 생성 2단계
               //1. compound 타입인게 확정났으니 그룹(새로 생성될 객체) 하나 만들어줘야함!
               subObject["text"] = "" + data[0];
-              subObject["group"] = "" + parent_group;
+              subObject["group"] = "" + root_group;
               subObject["isGroup"] = true
               if (data[0] != "DICT") subObject["category"] = "object";
               else subObject["category"] = "dict";
@@ -1361,7 +1386,7 @@
                   //타입 분류
                   if (data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET") {
                     value = data[index];
-                    decode_type(value, data[1], parent_group, false);
+                    decode_type(value, data[1], root_group, false);
                   } else if (data[0] == "DICT") {
 
                     key = data[index][0]
@@ -1393,9 +1418,9 @@
                       } else {
                         //true이면 "'key' : ??" 형태로 출력하기 위함
                         isDictType = true
-                        decode_type(key, subdict["key"], parent_group, true); //key는 compound type이 될수 없으니 링크없이
+                        decode_type(key, subdict["key"], root_group, true); //key는 compound type이 될수 없으니 링크없이
                         isDictType = false
-                        decode_type(value, subdict["key"], parent_group, false);
+                        decode_type(value, subdict["key"], root_group, false);
                       }
                     }
                   }
@@ -1419,7 +1444,7 @@
                     if (!isFind) {
                       value = func_name + "()";
                     }
-                    decode_type(value, data[1], parent_group, false);
+                    decode_type(value, data[1], root_group, false);
                   } //else
                 } // >=2
               } //for

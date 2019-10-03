@@ -73,7 +73,7 @@ function init() {
         wrappingColumn: 1
       }),
       $$(go.TextBlock, {
-          font: "bold 16px sans-serif",
+          font: "bold 15px sans-serif",
           alignment: go.Spot.Left,
           isMultiline: false // don't allow newlines in text
         },
@@ -85,9 +85,9 @@ function init() {
         },
         $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
           {
-            fill: "rgba(128, 128, 64, 0.4)",
-            stroke: "black",
-            strokeWidth: 2,
+            fill: "rgba(128, 128, 64, 0.2)",
+            stroke: "grey",            //다른 테마 stroke="black", width:2
+            strokeWidth: 3,
             //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
           }),
         $$(go.Placeholder, {
@@ -105,10 +105,13 @@ function init() {
         },
         $$(go.GridLayout, {
           alignment: go.GridLayout.Center,
-          //                         wrappingColumn: Infinity,
+          // 아래 설정 -> 가로로만 나열하는 layout
+          // wrappingWidth : Infinity,
+          // wrappingColumn : Infinity,
           cellSize: new go.Size(1, 1),
           spacing: new go.Size(5, 5)
         }),
+        // new go.Binding("wrappingColumn", "column")),
         $$(go.TextBlock, {
             font: "bold 14px sans-serif",
             alignment: go.Spot.Left,
@@ -120,7 +123,7 @@ function init() {
           },
           $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
             {
-              fill: "rgba(128, 128, 64, 0.2)",
+              fill: "rgba(128, 128, 64, 0.1)",
               strokeWidth: 0
             }),
           $$(go.Placeholder, {
@@ -153,13 +156,13 @@ function init() {
         },
         $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
           {
-            fill: "rgba(128, 128, 64, 0.4)",
-            stroke: "black",
-            strokeWidth: 2,
+            fill: "rgba(128, 128, 64, 0.2)",
+            stroke: "grey",
+            strokeWidth: 3,
             //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
           },
           new go.Binding("stroke", "isHighlighted", function(h) {
-            return h ? "red" : "black";
+            return h ? "red" : "grey";
           }).ofObject()),
         $$(go.Placeholder, {
           margin: 10,
@@ -191,9 +194,9 @@ function init() {
         },
         $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
           {
-            fill: "rgba(128, 128, 64, 0.4)",
-            stroke: "black",
-            strokeWidth: 2,
+            fill: "rgba(128, 128, 64, 0.2)",
+            stroke: "grey",
+            strokeWidth: 3,
             // //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
           }),
         $$(go.Placeholder, {
@@ -217,17 +220,14 @@ function init() {
       }),
       $$(go.Panel, "Auto", {
           name: "PANEL",
-          margin: new go.Margin(5, 0, 0, 0),
         },
         $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
           {
-            fill: "rgba(128, 128, 64, 0.4)",
-            stroke: "black",
-            strokeWidth: 1.5,
-            //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
+            fill: "rgba(128, 128, 64, 0.1)",
+            strokeWidth: 0
           }),
         $$(go.Placeholder, {
-          margin: 5,
+          margin: 4,
           background: "transparent"
         }) // represents where the members are
       )
