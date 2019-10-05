@@ -18,6 +18,7 @@ function init() {
           //                   fromLinkable: true,
           //                   toLinkable: true
         },
+        new go.Binding("stroke", "stroke"),
         // Shape.fill is bound to Node.data.color
         new go.Binding("fill", "color")),
       $$(go.TextBlock, {
@@ -27,6 +28,7 @@ function init() {
           isMultiline: false, // don't allow newlines in text
           // TextBlock.text is bound to Node.data.key
         },
+        new go.Binding("stroke", "text_stroke"),
         new go.Binding("text", "text"))
     );
 
@@ -47,20 +49,20 @@ function init() {
           strokeWidth: 1.5
         },
         new go.Binding("stroke", "color")),
-        // Link.isHighlighted is true 이면 "stroke"를 "red"로 변경
-        // new go.Binding("stroke", "isHighlighted", function(h) {
-        //   return h ? "red" : "black";
-        // }).ofObject()),
+      // Link.isHighlighted is true 이면 "stroke"를 "red"로 변경
+      // new go.Binding("stroke", "isHighlighted", function(h) {
+      //   return h ? "red" : "black";
+      // }).ofObject()),
       $$(go.Shape, {
           toArrow: "standard",
           stroke: null,
           strokeWidth: 0
         },
         new go.Binding("fill", "color"))
-        // Link.isHighlighted is true 이면 "fill"을 "red"로 변경
-        // new go.Binding("fill", "isHighlighted", function(h) {
-        //   return h ? "red" : "black";
-        // }).ofObject())
+      // Link.isHighlighted is true 이면 "fill"을 "red"로 변경
+      // new go.Binding("fill", "isHighlighted", function(h) {
+      //   return h ? "red" : "black";
+      // }).ofObject())
     );
 
   // 전역 변수 template
@@ -78,7 +80,7 @@ function init() {
           isMultiline: false // don't allow newlines in text
         },
         new go.Binding("text", "text").makeTwoWay(),
-        new go.Binding("stroke", "color")),
+        new go.Binding("stroke", "text_color")),
       $$(go.Panel, "Auto", {
           name: "PANEL",
           //                           margin: new go.Margin(0, 30, 0, 0),
@@ -87,10 +89,11 @@ function init() {
           {
             fill: "rgba(128,128,128, 0.4)",
             // fill: "rgba(128,128,128,0.2)" // fill: "rgba(128,128,64,0.2)", "rgba(43,43,43,0.2)"
-            stroke: "black",            //다른 테마 stroke="black", width:2
+            stroke: "black", //다른 테마 stroke="black", width:2
             strokeWidth: 2,
             //                         portId: "", cursor: "pointer",  // the Shape is the port, not the whole Node
-          }),
+          },
+          new go.Binding("stroke", "color")),
         $$(go.Placeholder, {
           margin: 10,
           background: "transparent"
@@ -98,41 +101,41 @@ function init() {
       )
     );
 
-    // Object 틀 template
-    var objectPanelGroupTemplate =
-      $$(go.Group, "Vertical", {
-          avoidable: false,
-          layerName: "Background"
+  // Object 틀 template
+  var objectPanelGroupTemplate =
+    $$(go.Group, "Vertical", {
+        avoidable: false,
+        layerName: "Background"
+      },
+      $$(go.GridLayout, {
+        alignment: go.GridLayout.Center,
+        // 아래 설정 -> 가로로만 나열하는 layout
+        // wrappingWidth : Infinity,
+        // wrappingColumn : Infinity,
+        cellSize: new go.Size(1, 1),
+        spacing: new go.Size(5, 5)
+      }),
+      // new go.Binding("wrappingColumn", "column")),
+      $$(go.TextBlock, {
+          font: "bold 14px sans-serif",
+          alignment: go.Spot.Left,
         },
-        $$(go.GridLayout, {
-          alignment: go.GridLayout.Center,
-          // 아래 설정 -> 가로로만 나열하는 layout
-          // wrappingWidth : Infinity,
-          // wrappingColumn : Infinity,
-          cellSize: new go.Size(1, 1),
-          spacing: new go.Size(5, 5)
-        }),
-        // new go.Binding("wrappingColumn", "column")),
-        $$(go.TextBlock, {
-            font: "bold 14px sans-serif",
-            alignment: go.Spot.Left,
-          },
-          new go.Binding("text", "text").makeTwoWay(),
-          new go.Binding("stroke", "color")),
-        $$(go.Panel, "Auto", {
-            name: "PANEL",
-          },
-          $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
-            {
-              fill: "rgba(128,128,128, 0.1)",
-              strokeWidth: 0
-            }),
-          $$(go.Placeholder, {
-            margin: 10,
-            background: "transparent"
-          }) // represents where the members are
-        )
-      );
+        new go.Binding("text", "text").makeTwoWay(),
+        new go.Binding("stroke", "color")),
+      $$(go.Panel, "Auto", {
+          name: "PANEL",
+        },
+        $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
+          {
+            fill: "rgba(128,128,128, 0.1)",
+            strokeWidth: 0
+          }),
+        $$(go.Placeholder, {
+          margin: 8,
+          background: "transparent"
+        }) // represents where the members are
+      )
+    );
 
   // 생성된 객체 template
   var objectGroupTemplate =
@@ -166,7 +169,7 @@ function init() {
             return h ? "red" : "black";
           }).ofObject()),
         $$(go.Placeholder, {
-          margin: 10,
+          margin: 8,
           background: "transparent"
         }) // represents where the members are
       )
@@ -204,7 +207,7 @@ function init() {
             return h ? "red" : "black";
           }).ofObject()),
         $$(go.Placeholder, {
-          margin: 10,
+          margin: 7,
           background: "transparent"
         }) // represents where the members are
       )
@@ -231,7 +234,7 @@ function init() {
             strokeWidth: 0
           }),
         $$(go.Placeholder, {
-          margin: 4,
+          margin: 2,
           background: "transparent"
         }) // represents where the members are
       )

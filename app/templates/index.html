@@ -544,10 +544,17 @@
             return;
           }
 
+          except_global_link = false
+          // stack이 그려지면 global 링크들 모두 회색처리
+          if (stack_locals.length != 0) except_global_link = true
           //Global, Object 시각화
-          drawGlobalsObjectsNode(globals);
-          //stack_locals 시각화
-          if (stack_locals.length != 0) drawStackLocalsNode(stack_locals);
+          drawGlobalsObjectsNode(globals,except_global_link);
+
+          if (stack_locals.length != 0) {
+            focus_link = stack_locals[0][0];
+            console.log(focus_link);
+            drawStackLocalsNode(stack_locals, focus_link);
+          }
 
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
           //gojs 초기화
@@ -604,12 +611,15 @@
           except_global_link = false
           // stack이 그려지면 global 링크들 모두 회색처리
           if (stack_locals.length != 0) except_global_link = true
-
           //Global, Object 시각화
           drawGlobalsObjectsNode(globals, except_global_link);
 
           //stack_locals 시각화 길이 0이면 안그림
-          if (stack_locals.length != 0) drawStackLocalsNode(stack_locals);
+          if (stack_locals.length != 0) {
+            focus_link = stack_locals[0][0];
+            console.log(focus_link);
+            drawStackLocalsNode(stack_locals, focus_link);
+          }
 
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
           myDiagram.requestUpdate();
@@ -950,16 +960,17 @@
           // 색상 초기화
           color_index = 0;
 
+          // 전역변수 생성안되어 있으면 최상위 프레임인(프레임,전역변수,객체) 도 그리지 않음
           if (global_order.length != 0 && global_order.length != undefined) {
-            //frames 생성
+            //'프레임' frame 생성
             dict = {};
             dict["key"] = "프레임";
             dict["text"] = "프레임";
-            dict["color"] = "black";
+            dict["color"] = "transparent";
             dict["isGroup"] = true;
             nodeDataArray.push(dict);
 
-            //global frame 생성
+            //'전역변수' frame 생성
             dict = {}
             dict["key"] = "전역변수";
             dict["text"] = "전역변수";
@@ -968,9 +979,11 @@
             dict["group"] = "프레임";
             nodeDataArray.push(dict);
           }
-          // 임시 globalNode
+          // 임시 globalNode   -> {x: [1,2,3]} -> "x"
           tempGlobalNode = [];
-          // 임시 objectNode
+          // // 임시 Objectframe ->  {x : [1,2,3]} -> "[]"
+          tempObjectFrame = [];
+          // 임시 objectNode -> {x: [1,2,3]} -> "1,2,3"
           tempObjectNode = [];
           // 임시 linkData
           tempLinkData = [];
@@ -1068,7 +1081,7 @@
           }
 
           //중복된 주소 체크
-          console.log(overlap)
+          console.log(overlap);
 
           // 그리는 순서 정리하기 !!
           // *중요 1. global 생성 순서대로 nodeDataArray 정렬 2. global 생성 순서대로 object,linkDataArray 재 정렬
@@ -1082,18 +1095,23 @@
               }
             }
 
-            //2.
-            tmp_link = []
-            // global 변수가 포인팅하는 object 따로 저장 -> linkedList 잘 표현하기 위해서
-            for (var j = 0; j < linkDataArray.length; j++) {
-              //포인터가 아닐때 -> ex) x,y,i 등등
+            // 전역변수가 첫번째로 가르키는 주소만 미리 추가 후 아래 2.에서 사용
+            // ex) from : "x" , to : "1" ...
+            for(var j=0;j<linkDataArray.length;j++){
+              //(1) 포인터가 아닐때 -> ex) x,y,i 등등
               if (global_order[i] == linkDataArray[j]["from"]) {
                 link_to = linkDataArray[j]["to"]; // global 변수가 가르키는 목적지 key
                 if (!object_order.includes(link_to)) object_order.push(link_to);
               }
-              //포인터가 있다면 검사 -> p들어가면 포인터
+            }
+
+            //2.
+            // global 변수가 포인팅하는 object 따로 저장 -> linkedList 잘 표현하기 위해서
+            for (var j = 0; j < linkDataArray.length; j++) {
+
+              //(2) 포인터가 있다면 검사 -> p들어가면 포인터
               if (linkDataArray[j]["from"].includes('p')) {
-                //p_( ) -> () 이 부분만 가져옴
+                //p_()_?? -> () 이 부분만 가져옴
                 check = linkDataArray[j]["from"].split("_")[1]
 
                 // 지금까지 link 탄 모든 주소 저장해둔거 다시 확인해서 돔
@@ -1120,30 +1138,32 @@
           console.log("object_order");
           console.log(object_order);
 
+          console.log("tempObjectFrame");
+          console.log(tempObjectFrame);
+
           console.log("tempObjectNode");
           console.log(tempObjectNode);
 
-          // Object가 비었으면 Objectframe 생성 X
-          if (tempObjectNode.length != 0) {
+          // ObjectFrame이 비었으면 '객체' Frame 생성 X
+          if (tempObjectFrame.length != 0) {
             //Object frame 생성
             dict = {}
             dict["key"] = "객체";
             dict["text"] = "객체";
-            dict["color"] = "black"
+            dict["color"] = "transparent";
             dict["isGroup"] = true;
             // dict["category"] = "dict";
             nodeDataArray.push(dict);
 
-            //#########################################동작은 하는데 매우 비효율적인듯..?
-            // object_order 순서대로 먼저 저장
+            // object_order 순서대로 '객체'안의 frame(틀) 먼저 저장
             for (var i = 0; i < object_order.length; i++) {
-              for (var j = 0; j < tempObjectNode.length; j++) {
-                if (object_order[i] == tempObjectNode[j]['key']) {
-                  nodeDataArray.push(tempObjectNode[j]);
+              for (var j = 0; j < tempObjectFrame.length; j++) {
+                if (object_order[i] == tempObjectFrame[j]['key']) {
+                  nodeDataArray.push(tempObjectFrame[j]);
                 }
               }
             }
-            // dict_order 순서에 맞게 구한 후 tempObjectNode와 비교할 문자열 넣은리스트
+            // dict_order 순서에 맞게 구한 후 #point_1에서 tempObjectNode와 비교할 문자열 넣은 리스트
             token_list = []
             //dict_order 순서대로 저장
             for (var i = 0; i < dict_order.length; i++) {
@@ -1159,7 +1179,8 @@
               }
             }
 
-            //나머지 tempObject -> nodeDataArray에 저장 ############################################## 주의
+            // #point_1
+            //나머지 위에서 검사하지 않은 tempObject -> nodeDataArray에 저장 ############################################## 주의
             for (var j = 0; j < tempObjectNode.length; j++) {
               if (!object_order.includes(tempObjectNode[j]['key']) && !token_list.includes(tempObjectNode[j]['key'])) {
                 nodeDataArray.push(tempObjectNode[j]);
@@ -1174,7 +1195,7 @@
 
         // stack 변수 그리는 함수
         //stack 그리기 -> 특정 위치에서 line 1 , line 10 위치 등등
-        function drawStackLocalsNode(stack_locals) {
+        function drawStackLocalsNode(stack_locals, focus_link) {
           console.log("stack_locals");
           console.log(stack_locals);
 
@@ -1204,6 +1225,7 @@
             //stack_locals의 크기 만큼 dict를 생성하니 group_key 저장해둠
             stack_group_key.push(dict["key"]);
           }
+          // 생성순서 거꾸로 먼저 추가해줌
           for(var i=tempStackNode.length-1;i>=0;i--) nodeDataArray.push(tempStackNode[i]);
 
           //stack 생성 순서대로 검사 ###################################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
@@ -1248,6 +1270,7 @@
                   link = {}
                   link["from"] = stack_global["key"];
                   link["to"] = stack_object["key"];
+                  if(focus_link != func_name) link["color"] = "grey"
                   linkDataArray.push(link);
 
                   // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
@@ -1370,8 +1393,22 @@
               link["to"] = subObject["key"];
               linkDataArray.push(link);
             }
+            // 전역변수에서 decode_type 첫 생성시
+            else{
+              //data 길이가 2이면 [],(),{} 비어있는 리스트이므로 Empty 이벤트 추가
+              if(data.length==2){
+                emptyObject = {}
+                emptyObject["key"] = "empty_" + data[1];
+                emptyObject["text"] = "Empty";
+                emptyObject["color"] = "transparent";
+                emptyObject["stroke"] = "transparent";
+                emptyObject["group"] = "" + data[1];
+                tempObjectNode.push(emptyObject);
+              }
+            }
 
             // linkedList구조에서 link 조작시 panel 별로 잘 매칭할 수 있도록
+            // 즉, 전역변수가 한번 링크해서 들어가는 모든 노드들은 같은 panel에 매칭
             if (object_ref.length >= 1) {
               // console.log("마지막 object_ref");
               // console.log(parseInt(object_ref[object_ref.length-1]));
@@ -1397,8 +1434,7 @@
               subObject["isGroup"] = true
               if (data[0] != "DICT") subObject["category"] = "object";
               else subObject["category"] = "dict";
-              tempObjectNode.push(subObject);
-
+              tempObjectFrame.push(subObject);
 
               //2. 해당 object 값안에서 재귀로 계속 object 생성
               for (var index in data) {
