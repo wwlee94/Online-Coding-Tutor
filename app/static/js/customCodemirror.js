@@ -47,7 +47,7 @@ function breakpoints(cm,n){
 function makeMarker(type) {
   color = "#30A9DE"
   if(type=='current'){
-    color = '#FFFFFF';   
+    color = '#FFFFFF';
   }
   else if(type=='next'){
     color = '#30A9DE';

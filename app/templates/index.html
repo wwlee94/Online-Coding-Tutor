@@ -24,7 +24,6 @@
 
   <style>
     /* 코드미러 설정 */
-
     .CodeMirror {
       border-top: 1px solid black;
       border-bottom: 1px solid black;
@@ -204,7 +203,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
     <!-- Codemirror .js-->
-    <script src="static/js/codemirror.js"></script>
+    <script src="static/js/codemirror.js?ver=2"></script>
     <script src="static/js/customCodemirror.js"></script>
     <script src="static/js/python.js"></script>
     <script src="static/js/active-line.js"></script>
@@ -300,7 +299,11 @@
         theme: "darcula",
         scrollbarStyle: "simple",
         extraKeys: { //키설정
-          "tap": "autocomplete"
+          // "Tab": "autocomplete",
+          // tab 수정 대신 indentUnit 수정함
+          // "Tab": function(cm){
+          //     cm.replaceSelection("  " , "end");
+          //   }
         },
         val: editor.value,
         gutters: ["breakpoints", "CodeMirror-linenumbers"]
@@ -334,6 +337,12 @@
       cm_debug.setSize(580, cm_debug.defaultTextHeight() + 6 * 5);
       cm_debug.on("beforeChange", singleLine); //코드미러 입력라인 1줄로 제한
       cm_debug.on("beforeChange", maxLength); //최대 입력값 제한
+
+      // $('.CodeMirror').resizable({
+      //   resize: function() {
+      //     cm_printer.setSize($(this).width(), $(this).height());
+      //   }
+      // });
 
 
       //       //codemirror text 정보 저장
@@ -498,7 +507,7 @@
 
           event = jsonArray[step - 1]['event'];
           globals = jsonArray[step - 1]['_globals'];
-          stack_locals = jsonArray[step -1]['stack_locals'];
+          stack_locals = jsonArray[step - 1]['stack_locals'];
           stdout = jsonArray[step - 1]['stdout'];
 
 
@@ -974,8 +983,8 @@
 
           //각 global변수(compound 타입 일경우) 처음 가리키는 주소 담은 배열
           global_first_ref = [];
-          global_order.forEach(function(key){
-            if(!isPrimitive(globals[key])) global_first_ref.push(globals[key][1]);
+          global_order.forEach(function(key) {
+            if (!isPrimitive(globals[key])) global_first_ref.push(globals[key][1]);
           });
           console.log("global_first_ref");
           console.log(global_first_ref);
@@ -1035,7 +1044,7 @@
                   // 데이터 값(primitive or compound) , group_key(재귀로 돌면서 자기 위 부모 참조) , 기준이 될 panel(루트 그룹), 첫 생성인지 아닌지 여부
                   decode_type(globals[key], object_panel["key"], object_panel["key"], true);
 
-                  global_index ++;
+                  global_index++;
                 } //if
               }
             } // hasOwnProperty
@@ -1061,7 +1070,8 @@
           //중복된 주소 체크
           console.log(overlap)
 
-          // 그리는 순서 정리하기 !! *중요 1. global 생성 순서대로 nodeDataArray 정렬 2. global 생성 순서대로 object,linkDataArray 재 정렬
+          // 그리는 순서 정리하기 !!
+          // *중요 1. global 생성 순서대로 nodeDataArray 정렬 2. global 생성 순서대로 object,linkDataArray 재 정렬
           // 호출된 global 변수 순서대로 저장 -> 순서는 global_order에 저장해둠
           for (var i = 0; i < global_order.length; i++) {
             //1.
@@ -1101,7 +1111,6 @@
                       if (!object_order.includes(link_to)) object_order.push(link_to);
                       overlap[link_to] -= 1 // 한번 지나쳤으니 -1
                     }
-
                   }
                 }
               }
@@ -1110,6 +1119,9 @@
 
           console.log("object_order");
           console.log(object_order);
+
+          console.log("tempObjectNode");
+          console.log(tempObjectNode);
 
           // Object가 비었으면 Objectframe 생성 X
           if (tempObjectNode.length != 0) {
@@ -1171,6 +1183,10 @@
           //             tempGlobalNode = [];
           // 임시 objectNode
           tempObjectNode = [];
+          // 임시 stackNode
+          tempStackNode = [];
+          //stack_group_key
+          stack_group_key = [];
 
           //함수 이름
           for (var i = 0; i < stack_locals.length; i++) {
@@ -1178,13 +1194,17 @@
 
             //func stack 틀생성
             dict = {};
-            dict["key"] = "stack_" + func_name;
+            dict["key"] = "stack_" + func_name+ (i+1);
             dict["text"] = func_name;
             dict["color"] = "black";
             dict["group"] = "프레임"
             dict["isGroup"] = true;
-            nodeDataArray.push(dict);
+            tempStackNode.push(dict);
+
+            //stack_locals의 크기 만큼 dict를 생성하니 group_key 저장해둠
+            stack_group_key.push(dict["key"]);
           }
+          for(var i=tempStackNode.length-1;i>=0;i--) nodeDataArray.push(tempStackNode[i]);
 
           //stack 생성 순서대로 검사 ###################################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
           for (var i = 0; i < stack_order.length; i++) {
@@ -1204,18 +1224,18 @@
                   if (key == "__return__") stack_global["text"] = "Return = " + value;
                   else stack_global["text"] = key + " = " + value;
 
-                  stack_global["key"] = "stack_" + key;
+                  stack_global["key"] = "stack_" + key + (j+1);
                   stack_global["color"] = color_list[color_index % color_list.length];
-                  stack_global["group"] = "stack_" + func_name;
+                  stack_global["group"] = stack_group_key[j];
                   color_index++;
                   nodeDataArray.push(stack_global);
                 } else {
                   //스택 변수 h
                   stack_global = {}
-                  stack_global["key"] = "stack_" + key;
+                  stack_global["key"] = "stack_" + key + (j+1);
                   stack_global["text"] = key;
                   stack_global["color"] = color_list[color_index % color_list.length];
-                  stack_global["group"] = "stack_" + func_name;
+                  stack_global["group"] = stack_group_key[j];
                   color_index++;
                   nodeDataArray.push(stack_global);
 
@@ -1270,7 +1290,7 @@
                 nodeDataArray.push(tempObjectNode[j]);
               }
             }
-          }
+          }// != 0
         }
 
         // 함수 파라미터 가져오기 -> func(a,b,c)
@@ -1352,17 +1372,17 @@
             }
 
             // linkedList구조에서 link 조작시 panel 별로 잘 매칭할 수 있도록
-            if(object_ref.length>=1){
+            if (object_ref.length >= 1) {
               // console.log("마지막 object_ref");
               // console.log(parseInt(object_ref[object_ref.length-1]));
               // console.log("현재 주소");
               // console.log(parseInt(data[1]));
               //각 전역변수가(compound 타입 일경우) 처음 가리키는 주소 담은 배열
-              if(Math.abs(parseInt(object_ref[object_ref.length-1]) - parseInt(data[1])) != 1) {
-                  if(global_first_ref[global_index] != data[1]){
-                    console.log("패스해야할 부분");
-                    return;
-                  }
+              if (Math.abs(parseInt(object_ref[object_ref.length - 1]) - parseInt(data[1])) != 1) {
+                if (global_first_ref[global_index] != data[1]) {
+                  console.log("패스해야할 부분");
+                  return;
+                }
               }
             }
 

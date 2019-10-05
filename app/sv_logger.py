@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 #무한루프 방지
-MAX_EXECUTED_LINES = 200
+MAX_EXECUTED_LINES = 250
 
 def set_max_executed_lines(m):
     global MAX_EXECUTED_LINES
@@ -159,7 +159,7 @@ class PGLogger(bdb.Bdb):
                 #__module 제외하고
                 if k != '__module__':
                     encoded_locals[k] = sv_encoder.encode(v, self.ignore_id)
-
+                    # class 들어올 때 예외 처리해야함
             encoded_stack_locals.append((cur_name,encoded_locals))
             i -= 1
         #while문 종료
@@ -197,7 +197,7 @@ class PGLogger(bdb.Bdb):
         if len(self.trace) >= MAX_EXECUTED_LINES:
             self.trace.append(dict(event='instruction_limit_reached',
                                   exception_msg=' (stopped after) '+str(MAX_EXECUTED_LINES)+' steps to prevent possible infinite while loop'))
-            sys.exit(0) # 실행 종료
+            # sys.exit(0) # 실행 종료
 
         #초기화
         self.forget()
@@ -229,11 +229,11 @@ class PGLogger(bdb.Bdb):
                        "__builtins__" : user_builtins,
                        "__stdout__" : user_stdout}
 
-        try:
+        # try:
             # bdp를 실행시킨것
-            self.run(script_str, user_globals, user_globals)
-        except SystemExit:
-            raise bdb.BdbQuit
+        self.run(script_str, user_globals, user_globals)
+        # except SystemExit:
+        #     raise bdb.BdbQuit
 #         #다른 어떤 오류가 발생할때
 #         except Exception:
 #             trace_back = sys.exc_info()

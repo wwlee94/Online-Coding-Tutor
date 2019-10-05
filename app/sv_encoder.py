@@ -94,9 +94,12 @@ def encode(data, ignore_id=False):
                     # if not m:
                     #     m = moduleRe.match(typeStr)
 
-                #assert m,dataType
-                #m.group() -> <type 'function'>
-                ret = [m.group(1),my_small_id,str(data)]
+                if m != None:
+                    #assert m,dataType
+                    #m.group() -> <type 'function'>
+                    ret = [m.group(1),my_small_id,str(data)]
+                else:
+                    ret = ["undefined",my_small_id,"undefined"]
             '''
             #Class , INSTANCE 처리 해야함
             elif dataType in (types.InstanceType,types.ClassType,types.TypeType) or \

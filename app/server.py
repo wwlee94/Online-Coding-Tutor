@@ -56,13 +56,14 @@ def before_request():
         session['debug_str'] = []
         user_no += 1
 #redirect로 온 데이터 보여줘야함..
-@app.route('/',methods=['GET','POST'])
+@app.route('/',methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         data = request.form # {url:url,data: data} -> data를 가져온것
         print(data['bno'])
         print(data['content'])
-        return render_template('index.html',content = data['content'])
+        contents = data['content']
+        return render_template('index.html',content = contents)
     else:
         return render_template('index.html',content = "false")
 @app.route('/test')

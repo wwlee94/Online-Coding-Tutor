@@ -7675,7 +7675,7 @@
       loadMode(cm);
     }, true);
 
-    option("indentUnit", 2, loadMode, true);
+    option("indentUnit", 4, loadMode, true);
     option("indentWithTabs", false);
     option("smartIndent", true);
     option("tabSize", 4, function (cm) {

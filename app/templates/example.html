@@ -15,7 +15,7 @@
         color: #ffffff;
         margin-top:5px;
       }
-   </style> 
+   </style>
   </head>
   <body>
 
@@ -56,10 +56,9 @@
         {% endfor %}
         </tbody>
     </table>
-    
-    <form action="/" method="get">
-        <input type="button" class="btn btn-default" value="돌아가기" onclick="window.history.back();">
-    </form>
+
+
+    <button type="button" class="btn btn-default" onClick="back();">돌아가기</button>
     <br/>
     <!-- pagination -->
     <nav aria-label="Search results pages">
@@ -141,7 +140,7 @@
 </div>
 
 <script>
-    
+
   onload = function () {
         dpTime();
     };
@@ -171,20 +170,24 @@
         setTimeout("dpTime()", 1000);
     }
     var bno;
-    
+
      $(document).ready(function () {
         $('.link').click(function(){
            bno = $(this).attr('value');
            $('#form'+bno).submit();
-        }); 
+        });
      });
-    
+     
+     function back(){
+       window.location.href = '/';
+     }
+
 // ajax 사용법
 //            data = {
 //                 "bno": bno,
 //                 "content": content
 //             };
-            
+
 //             $.ajax({
 //             url: url,
 //             type: type,
@@ -196,7 +199,7 @@
 //             });
 //         });
 //     });
-    
+
     </script>
   </body>
 </html>
