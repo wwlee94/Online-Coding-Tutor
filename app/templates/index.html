@@ -222,7 +222,7 @@
 
     <!-- go.js -->
     <script src="static/js/go.js"></script>
-    <script src="static/js/go_init.js?ver=2"></script>
+    <script src="static/js/go_init.js?ver=10"></script>
 
     <!-- inner script -->
     <script type="text/javascript" charset="utf-8">
@@ -270,7 +270,7 @@
           // allowVerticalScroll: false
         });
       myDiagram.scale = 0.8;
-      myDiagram.minScale = 0.8;
+      myDiagram.minScale = 0.7;
       myDiagram.autoScale = go.Diagram.Uniform;
       myDiagram.contentAlignment = go.Spot.Center;
       myDiagram.scrollMode = go.Diagram.InfiniteScroll;
@@ -1347,7 +1347,7 @@
         // 라인 별 json 데이터 파싱
         // state = true -> 처음 생성 객체
         // state = false -> recursive로 생성된 객체
-        // object -> object 링크
+        // data - 표현할 데이터, group_key 바로 위 부모객체, root_group - 최상위 부모객체, state
         function decode_type(data, group_key, root_group, state) {
 
           // 프리미티브이면 생성
@@ -1356,7 +1356,7 @@
             if (typeof(data) === typeof("")) data = "'" + data + "'";
             //python에선 null -> None으로 표현
             if (data == null) data = "None";
-            //DICT 타입이면
+            //DICT 타입이면 -> decode_type 함수를 (type == DICT)에서 호출한 경우
             if (isDictType) {
               text = data + " : ";
               data = ""
@@ -1366,7 +1366,7 @@
             subObject = {}
             subObject["key"] = "data_" + group_key + "_" + data;
             subObject["text"] = text
-            subObject["color"] = color_list[color_index++ % color_list.length];
+            subObject["color"] = color_list[++color_index % color_list.length];
             subObject["group"] = "" + group_key;
             tempObjectNode.push(subObject);
             return;

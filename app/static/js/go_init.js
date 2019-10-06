@@ -72,7 +72,9 @@ function init() {
         layerName: "Background"
       },
       $$(go.GridLayout, {
-        wrappingColumn: 1
+        wrappingColumn: 1,
+        // cellSize: new go.Size(1, 1),
+        spacing: new go.Size(5, 5)
       }),
       $$(go.TextBlock, {
           font: "bold 15px sans-serif",
@@ -83,7 +85,7 @@ function init() {
         new go.Binding("stroke", "text_color")),
       $$(go.Panel, "Auto", {
           name: "PANEL",
-          //                           margin: new go.Margin(0, 30, 0, 0),
+          // margin: new go.Margin(0, 0, 0, 0),
         },
         $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
           {
@@ -95,7 +97,7 @@ function init() {
           },
           new go.Binding("stroke", "color")),
         $$(go.Placeholder, {
-          margin: 10,
+          margin: 8,
           background: "transparent"
         }) // represents where the members are
       )
@@ -117,7 +119,7 @@ function init() {
       }),
       // new go.Binding("wrappingColumn", "column")),
       $$(go.TextBlock, {
-          font: "bold 14px sans-serif",
+          font: "bold 12px sans-serif",
           alignment: go.Spot.Left,
         },
         new go.Binding("text", "text").makeTwoWay(),
@@ -150,7 +152,7 @@ function init() {
         spacing: new go.Size(5, 5)
       }),
       $$(go.TextBlock, {
-          font: "bold 14px sans-serif",
+          font: "bold 12px sans-serif",
           alignment: go.Spot.Left,
         },
         new go.Binding("text", "text").makeTwoWay(),
@@ -185,10 +187,10 @@ function init() {
         alignment: go.GridLayout.Center,
         wrappingColumn: 1,
         cellSize: new go.Size(1, 1),
-        spacing: new go.Size(1, 1)
+        spacing: new go.Size(1, 5)
       }),
       $$(go.TextBlock, {
-          font: "bold 14px sans-serif",
+          font: "bold 12px sans-serif",
           alignment: go.Spot.Left,
         },
         new go.Binding("text", "text").makeTwoWay(),
@@ -223,18 +225,18 @@ function init() {
         alignment: go.GridLayout.Center,
         //                         wrappingColumn: Infinity,
         cellSize: new go.Size(1, 1),
-        spacing: new go.Size(1, 1)
+        spacing: new go.Size(0, 0)
       }),
       $$(go.Panel, "Auto", {
           name: "PANEL",
         },
         $$(go.Shape, "RoundedRectangle", // the rectangular shape around the members
           {
-            fill: "rgba(128,128,128, 0.1)",
+            fill: "rgba(128,128,128, 0)",
             strokeWidth: 0
           }),
         $$(go.Placeholder, {
-          margin: 2,
+          margin: 1,
           background: "transparent"
         }) // represents where the members are
       )
