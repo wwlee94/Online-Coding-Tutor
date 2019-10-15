@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 # dictionary & list append 예제
+
 list = []
 dict = {}
 dict["key"] = 1
