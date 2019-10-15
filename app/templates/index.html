@@ -4,10 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SourceCode Visualizer</title>
+  <title>SourceCode Educator</title>
   <!-- loading css -->
   <link rel="stylesheet" href="static/css/stairsloader.css">
   <link rel="stylesheet" href="static/css/bluespinnerloader.css">
+  <link rel="stylesheet" href="static/css/loading.css">
+  <link rel="stylesheet" href="static/css/loading-btn.css">
+
 
   <!-- Codemirror .css-->
   <link rel="stylesheet" href="static/css/codemirror.css">
@@ -52,8 +55,10 @@
       margin-top: 5px;
     }
 
-    /* page-loader , debug-loader css 설정 */
+    /* CSS */
+    .tab { white-space: pre; }
 
+    /* page-loader , debug-loader css 설정 */
     .h1-debug {
       font: 2em 'Roboto', sans-serif;
       margin-bottom: 40px;
@@ -91,7 +96,16 @@
 
     .btn-fix {
       width: 80px;
-      margin: 4px;
+      margin: 5px;
+    }
+
+    .ld-over-inverse {
+      width: 500px;
+      margin-right: 20px;
+    }
+
+    .ld-ring {
+      padding: 8px;
     }
 
     .btn:focus,
@@ -109,7 +123,7 @@
   </div>
 
   <!-- page loading -->
-  <div class="page-loader" style="display:none;">
+  <!-- <div class="page-loader" style="display:none;">
     <h1 class="h1-page">Page Loading ..</h1>
     <div class="loader">
       <div class="loader__bar"></div>
@@ -119,7 +133,7 @@
       <div class="loader__bar"></div>
       <div class="loader__ball"></div>
     </div>
-  </div>
+  </div> -->
 
   <!-- view 시작 -->
   <div class="container" style="display:none;">
@@ -135,24 +149,28 @@
         </p>
         {% if content == 'false'%}
         <p>
-          <!-- 코드를 수정할 수 있는 코드미러 에디터 view -->
-          <textarea id="editor"># -*- coding:utf-8 -*-&#10;&#10;# 메인함수&#10;if __name__ == '__main__':</textarea>
+          <div id="editor_loader" class="ld-over-inverse">
+            <!-- 코드를 수정할 수 있는 코드미러 에디터 view -->
+            <textarea id="editor"># -*- coding:utf-8 -*-&#10;&#10;# 메인함수&#10;if __name__ == '__main__':</textarea>
+            <div class="ld ld-ring ld-spin"></div>
+          </div>
         </p>
         {% else %}
         <p>
-          <!-- 코드를 수정할 수 있는 코드미러 에디터 view -->
-          <textarea id="editor">{{content}}</textarea>
+          <div id="editor_loader" class="ld-over-inverse">
+            <!-- 코드를 수정할 수 있는 코드미러 에디터 view -->
+            <textarea id="editor">{{content}}</textarea>
+            <div class="ld ld-ring ld-spin"></div>
+          </div>
         </p>
         {% endif %}
-
         <div>
-          <button id="visualize" class="btn btn-primary btn-fix" type="submit">Visualize</button>
-          <button id="run" class="btn btn-success btn-fix" type="submit">Run</button>
-          <button id="debug" class="btn btn-warning btn-fix" type="submit">Debug</button>
-          <button id="stop" class="btn btn-danger btn-fix" type="submit">Stop</button>
-          <button id="example" class="btn btn-info btn-fix" type="submit">Example</button>
+          <button id="visualize" class="btn btn-primary btn-fix" type="button">Visualize</button>
+          <button id="run" class="btn btn-success btn-fix" type="button">Run</button>
+          <button id="debug" class="btn btn-warning btn-fix" type="button">Debug</button>
+          <button id="stop" class="btn btn-danger btn-fix" type="button">Stop</button>
+          <button id="example" class="btn btn-info btn-fix" type="button">Example</button>
         </div>
-        <br />
         <div id="viz_step">
           <div> <span style="color:#FFFFFF; font-size:x-large"> → </span> <span> 현재 실행된 라인 </span></div>
           <div> <span style="color:#30A9DE; font-size:x-large"> → </span> <span> 다음에 실행될 라인 </span></div>
@@ -174,6 +192,10 @@
       </div>
 
       <div class="col-md-6" style="margin-top:10px">
+        <!-- 예제 뷰 -->
+        <div id="example_view" style="display:none;" toggle='0'>
+          {% include 'example.html' %}
+        </div>
 
         <!--  go.js를 이용한 visualizer -->
         <div id="myDiagramDiv" style="background-color: rgb(240,240,240); border: 1px solid black; width:580px; height:490px ; display:none;"></div>
@@ -195,6 +217,7 @@
 
       </div>
       <!-- row -->
+
     </div>
     <!-- container -->
 
@@ -226,7 +249,7 @@
 
     <!-- inner script -->
     <script type="text/javascript" charset="utf-8">
-      //vizualize 정보
+      //visualize 정보
       var jsonArray = [];
       // 전역변수 생성 순서 저장
       var global_order = [];
@@ -380,6 +403,7 @@
           //view 조정
           $("#print_view").show('slow');
           $("#pdb_view").hide('slow');
+          $("#example_view").hide('slow');
           $("#myDiagramDiv").show('slow');
           $("#viz_step_view").show('slow');
 
@@ -394,13 +418,14 @@
 
         /* run 버튼 입력시 서버로 요청 보내는 이벤트 */
         $('#run').on('click', function(e) {
-
+          //button loader 보이기
           showLoader();
           //결과창 초기화 및 view hide
           cm_printer.setValue("");
           //view 조정
           $("#print_view").show('slow');
           $("#pdb_view").hide('slow');
+          $("#example_view").hide('slow');
           $('#myDiagramDiv').hide('slow');
           $("#viz_step_view").hide('slow');
 
@@ -423,6 +448,7 @@
           //view 조정
           $("#print_view").show('slow');
           $("#pdb_view").hide('slow');
+          $("#example_view").hide('slow');
           $('#myDiagramDiv').hide('slow');
           $("#viz_step_view").hide('slow');
 
@@ -438,6 +464,7 @@
         $("#stop").on('click', function(e) {
           $("#print_view").hide('slow');
           $("#pdb_view").hide('slow');
+          $("#example_view").hide('slow');
           $('#myDiagramDiv').hide('slow');
           $("#viz_step_view").hide('slow');
 
@@ -452,9 +479,60 @@
           myDiagram.clear();
         });
 
+        // 트리거 파마리터 추가
+        (function($) {
+          $.each(['show', 'hide'], function(i, ev) {
+            var el = $.fn[ev];
+            $.fn[ev] = function() {
+              this.trigger(ev);
+              return el.apply(this, arguments);
+            };
+          });
+        })(jQuery);
+
+        // show, hide 트리거 이벤트
+        $('#example_view').on('show', function() {
+          console.log("trigger event!!!!!!!!")
+          $('#example_view').attr('toggle', '1')
+        });
+
+        $('#example_view').on('hide', function() {
+          $('#example_view').attr('toggle', '0')
+        });
+
         /* example버튼 클릭시 이벤트 */
         $("#example").on('click', function(e) {
-          document.location.href = "/example";
+          ex_toggle = $('#example_view').attr('toggle');
+          if (ex_toggle == '0') {
+            $('#example_view').show('slow');
+          } else {
+            $('#example_view').hide('slow');
+          }
+        });
+
+        // example.html 의 link 클릭시 AJAX 이벤트
+        $('.link').click(function() {
+
+          url = "/example"
+          type = "POST"
+
+          bno = $(this).attr('value');
+          content = $('#co' + bno).attr('value');
+          data = {
+            "bno": bno,
+            "content": content
+          };
+
+          $.ajax({
+            url: url,
+            type: type,
+            data: data,
+            //complete 되면 reload
+            complete: function(data) {
+              console.log("Search Example file Success !!");
+              cm_editor.setValue(data.responseJSON['content']);
+            }
+          });
         });
 
         /* PDB 명령어 입력시 서버로 요청 보내는 이벤트 */
@@ -548,7 +626,7 @@
           // stack이 그려지면 global 링크들 모두 회색처리
           if (stack_locals.length != 0) except_global_link = true
           //Global, Object 시각화
-          drawGlobalsObjectsNode(globals,except_global_link);
+          drawGlobalsObjectsNode(globals, except_global_link);
 
           if (stack_locals.length != 0) {
             focus_link = stack_locals[0][0];
@@ -688,6 +766,7 @@
         socket.on('*', function(msg) {
           //커서 위치 변경
           cm_printer.setCursor(cm_printer.lineCount(), 0);
+          removeLoader();
 
           setTimeout(function() {
             console.log("Response * !!");
@@ -710,6 +789,7 @@
           cm_printer.setValue("");
           $("#pdb_view").hide('slow');
           $("#print_view").hide('slow');
+          $("#example_view").hide('slow');
           $("#myDiagramDiv").hide('slow');
           $("#viz_step_view").hide('slow');
         });
@@ -901,22 +981,27 @@
         //초기 페이지 로더
         function pageLoader() {
           $('.container').hide();
-          $('html').css({
-            'background-color': '#ea4961'
-          });
-          $('.page-loader').fadeIn();
-          cm_editor.focus();
-          cm_editor.setCursor(cm_editor.lineCount(), 0);
-        }
-
-        //버튼 클릭할 때 - 로더 보여주기
-        function showLoader() {
-          $('.container').hide();
+          // pink - ea4961 , blue - 137b85
           $('html').css({
             'background-color': '#137b85'
           });
           $('.debug-loader').fadeIn();
+          cm_editor.focus();
+          cm_editor.setCursor(cm_editor.lineCount(), 0);
         }
+
+        //버튼 클릭할 때 - 버튼 로더 보여주기
+        function showLoader() {
+          var loader = $('#editor_loader');
+          loader.addClass('running');
+        }
+
+        // loader 삭제
+        function removeLoader() {
+          var loader = $('#editor_loader');
+          if (loader.hasClass('running')) loader.removeClass('running');
+        }
+
         //응답 받을 때 - 로더 숨기기
         function hideLoader() {
           // 200 - fast / 600 - slow
@@ -1097,7 +1182,7 @@
 
             // 전역변수가 첫번째로 가르키는 주소만 미리 추가 후 아래 2.에서 사용
             // ex) from : "x" , to : "1" ...
-            for(var j=0;j<linkDataArray.length;j++){
+            for (var j = 0; j < linkDataArray.length; j++) {
               //(1) 포인터가 아닐때 -> ex) x,y,i 등등
               if (global_order[i] == linkDataArray[j]["from"]) {
                 link_to = linkDataArray[j]["to"]; // global 변수가 가르키는 목적지 key
@@ -1215,7 +1300,7 @@
 
             //func stack 틀생성
             dict = {};
-            dict["key"] = "stack_" + func_name+ (i+1);
+            dict["key"] = "stack_" + func_name + (i + 1);
             dict["text"] = func_name;
             dict["color"] = "black";
             dict["group"] = "프레임"
@@ -1226,7 +1311,7 @@
             stack_group_key.push(dict["key"]);
           }
           // 생성순서 거꾸로 먼저 추가해줌
-          for(var i=tempStackNode.length-1;i>=0;i--) nodeDataArray.push(tempStackNode[i]);
+          for (var i = tempStackNode.length - 1; i >= 0; i--) nodeDataArray.push(tempStackNode[i]);
 
           //stack 생성 순서대로 검사 ###################################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
           for (var i = 0; i < stack_order.length; i++) {
@@ -1246,7 +1331,7 @@
                   if (key == "__return__") stack_global["text"] = "Return = " + value;
                   else stack_global["text"] = key + " = " + value;
 
-                  stack_global["key"] = "stack_" + key + (j+1);
+                  stack_global["key"] = "stack_" + key + (j + 1);
                   stack_global["color"] = color_list[color_index % color_list.length];
                   stack_global["group"] = stack_group_key[j];
                   color_index++;
@@ -1254,7 +1339,7 @@
                 } else {
                   //스택 변수 h
                   stack_global = {}
-                  stack_global["key"] = "stack_" + key + (j+1);
+                  stack_global["key"] = "stack_" + key + (j + 1);
                   stack_global["text"] = key;
                   stack_global["color"] = color_list[color_index % color_list.length];
                   stack_global["group"] = stack_group_key[j];
@@ -1270,7 +1355,7 @@
                   link = {}
                   link["from"] = stack_global["key"];
                   link["to"] = stack_object["key"];
-                  if(focus_link != func_name) link["color"] = "grey"
+                  if (focus_link != func_name) link["color"] = "grey"
                   linkDataArray.push(link);
 
                   // 이미 만들어져 있는 object 가 있다면 객체 생성 X ->  global과 링크만 연결하면 됨
@@ -1313,7 +1398,7 @@
                 nodeDataArray.push(tempObjectNode[j]);
               }
             }
-          }// != 0
+          } // != 0
         }
 
         // 함수 파라미터 가져오기 -> func(a,b,c)
@@ -1394,9 +1479,9 @@
               linkDataArray.push(link);
             }
             // 전역변수에서 decode_type 첫 생성시
-            else{
+            else {
               //data 길이가 2이면 [],(),{} 비어있는 리스트이므로 Empty 이벤트 추가
-              if(data.length==2){
+              if (data.length == 2) {
                 emptyObject = {}
                 emptyObject["key"] = "empty_" + data[1];
                 emptyObject["text"] = "Empty";

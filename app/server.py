@@ -5,7 +5,7 @@ sys.setdefaultencoding('utf-8')
 
 import os
 import re
-from flask import Flask , render_template, session , request, redirect, url_for
+from flask import Flask , render_template, session , request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
 import datetime
 app = Flask(__name__)
@@ -58,50 +58,31 @@ def before_request():
 #redirect로 온 데이터 보여줘야함..
 @app.route('/',methods=['GET', 'POST'])
 def index():
-    if request.method == 'POST':
-        data = request.form # {url:url,data: data} -> data를 가져온것
-        print(data['bno'])
-        print(data['content'])
-        contents = data['content']
-        return render_template('index.html',content = contents)
-    else:
-        return render_template('index.html',content = "false")
+    # 예제 파일들
+    file_list_py = get_example_file()
+
+    # if request.method == 'POST':
+    #     # data = request.form # {url:url,data: data} -> data를 가져온것
+    #     # contents = data['content']
+    #     return render_template('index.html', content = contents file_list_py = file_list_py)
+    # else:
+    return render_template('index.html', content = 'false', file_list_py = file_list_py)
+
+@app.route('/example', methods=['POST'])
+def example():
+    # bno = request.args.get('bno')
+    # content = request.args.get('content')
+    bno = request.form['bno']
+    content = request.form['content']
+    print(bno)
+    print(content)
+    dict = {}
+    dict['content'] = content
+    return jsonify(dict)
+
 @app.route('/test')
 def test():
     return render_template('loading-page.html')
-
-#python 코드 예제 리눅스 파일 조회 후 반환
-@app.route('/example')
-def example():
-    file_info = []
-    path=os.path.join("/home/ubuntu/sv_flask/app/example/python/")
-    file_list = os.listdir(path)
-# 	file_list_py = [file for file in file_list if file.endswith('.py')]
-    file_list_py = []
-    for file in file_list:
-        filepath = ""
-        content = ""
-        count = 0
-        filepath = path + file
-        if file.endswith('.py'):
-            #파일 내용 읽기
-            fid = open(filepath,'r')
-            lines = fid.readlines()
-            for line in lines:
-                if count == 1: info = line
-                content = content + line
-                count += 1
-            fid.close()
-            #파일 크기 읽기
-            size = os.path.getsize(filepath)
-            #파일 수정일 읽기
-            mtime = os.path.getmtime(filepath)
-            mtime = datetime.datetime.fromtimestamp(mtime)
-            mtime = mtime.ctime()
-            file_list_py.append({'file':file,'info':info,'size':size,
-                              'mtime':mtime,'content':content})
-    print (file_list_py)
-    return render_template('example.html',file_list_py = file_list_py)
 
 @socketio.on('connect')
 def connect():
@@ -372,5 +353,37 @@ def check_pdb_finished(str):
         return 1
     else:
         return -1
+
+# 예제 파일 가져오기
+def get_example_file():
+    file_info = []
+    path=os.path.join("/home/ubuntu/sv_flask/app/example/python/")
+    file_list = os.listdir(path)
+# 	file_list_py = [file for file in file_list if file.endswith('.py')]
+    file_list_py = []
+    for file in file_list:
+        filepath = ""
+        content = ""
+        count = 0
+        filepath = path + file
+        if file.endswith('.py'):
+            #파일 내용 읽기
+            fid = open(filepath,'r')
+            lines = fid.readlines()
+            for line in lines:
+                if count == 1: info = line
+                content = content + line
+                count += 1
+            fid.close()
+            #파일 크기 읽기
+            size = os.path.getsize(filepath)
+            #파일 수정일 읽기
+            mtime = os.path.getmtime(filepath)
+            mtime = datetime.datetime.fromtimestamp(mtime)
+            # mtime = mtime.ctime()
+            time_ko = mtime.strftime('%Y년 %m월 %d일 %H:%M:%S')
+            file_list_py.append({'file':file,'info':info,'size':size,
+                              'mtime':time_ko,'content':content})
+    return file_list_py
 if __name__ == '__main__':
     socketio.run(app,host='0.0.0.0',port=5000,debug=True)
