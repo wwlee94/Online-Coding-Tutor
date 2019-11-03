@@ -103,7 +103,7 @@ function init() {
       )
     );
 
-  // Object 틀 template
+  // Object 틀(panel) template
   var objectPanelGroupTemplate =
     $$(go.Group, "Vertical", {
         avoidable: false,

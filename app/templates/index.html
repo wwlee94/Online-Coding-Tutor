@@ -226,8 +226,8 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
     <!-- Codemirror .js-->
-    <script src="static/js/codemirror.js?ver=2"></script>
-    <script src="static/js/customCodemirror.js"></script>
+    <script src="static/js/codemirror.js"></script>
+    <script src="static/js/customCodemirror.js?ver=2"></script>
     <script src="static/js/python.js"></script>
     <script src="static/js/active-line.js"></script>
     <script src="static/js/simplescrollbars.js"></script>
@@ -245,7 +245,7 @@
 
     <!-- go.js -->
     <script src="static/js/go.js"></script>
-    <script src="static/js/go_init.js?ver=10"></script>
+    <script src="static/js/go_init.js"></script>
 
     <!-- inner script -->
     <script type="text/javascript" charset="utf-8">
@@ -276,6 +276,9 @@
       var color_index = 0
       //DICT 타입인지 아닌지
       var isDictType = false
+
+      //subpanel의 개수 -> ObjectPanel안의 패널 개수
+      var panel_count = 0
 
       //go.js 변수 선언
       var $$ = go.GraphObject.make; // for conciseness in defining templates
@@ -322,6 +325,7 @@
         theme: "darcula",
         scrollbarStyle: "simple",
         extraKeys: { //키설정
+          Tab : betterTab
           // "Tab": "autocomplete",
           // tab 수정 대신 indentUnit 수정함
           // "Tab": function(cm){
@@ -628,7 +632,9 @@
           //Global, Object 시각화
           drawGlobalsObjectsNode(globals, except_global_link);
 
+          //stack_locals 시각화 길이 0이면 안그림
           if (stack_locals.length != 0) {
+            // 현재 진행 중인 스택은 focus 주기
             focus_link = stack_locals[0][0];
             console.log(focus_link);
             drawStackLocalsNode(stack_locals, focus_link);
@@ -731,7 +737,7 @@
           cm_printer.setCursor(cm_printer.lineCount(), 0);
 
           //Global, object 시각화
-          drawGlobalsObjectsNode(globals);
+          drawGlobalsObjectsNode(globals,false);
           //             //stack_locals 시각화
           //             drawStackLocalsNode(stack_locals);
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
@@ -1036,7 +1042,7 @@
         }
 
         //global, object 그리는 함수
-        //go.js 노드, 링크 데이터 채워 그리기 -> global <- 링크 -> object // -> 특정 위치에서
+        //go.js 노드, 링크 데이터 채워 그리기 -> (global - 링크 - object) // 특정 위치에서
         function drawGlobalsObjectsNode(globals, except_link) {
 
           // 노드, 링크 초기화
@@ -1044,6 +1050,8 @@
           linkDataArray = [];
           // 색상 초기화
           color_index = 0;
+          //subpanel 개수 초기화
+          panel_count = 0;
 
           // 전역변수 생성안되어 있으면 최상위 프레임인(프레임,전역변수,객체) 도 그리지 않음
           if (global_order.length != 0 && global_order.length != undefined) {
@@ -1079,7 +1087,7 @@
           //dict 생성
           dict_ref = [];
 
-          //각 global변수(compound 타입 일경우) 처음 가리키는 주소 담은 배열
+          //각 global변수(compound 타입 일경우) 처음 가리키는 주소 담은 배열 -> (linkedList 그릴때 layer 나누려고?)
           global_first_ref = [];
           global_order.forEach(function(key) {
             if (!isPrimitive(globals[key])) global_first_ref.push(globals[key][1]);
@@ -1092,7 +1100,7 @@
           // 모든 경우에 globals 변수 검사 -> {x:[~~],:"~~", ...}
           //global_order의 변수 순서대로 for문 돌며 검사  ************************* 얘 덕분에 순서대로 해결
           global_order.forEach(function(key) {
-
+            // 맞는 키를 가지고 있다면
             if (globals.hasOwnProperty(key)) {
               if (isPrimitive(globals[key])) {
 
@@ -1153,7 +1161,7 @@
           console.log("object_ref");
           console.log(object_ref);
 
-          //############################################### *link, node 순서 바꾸는 작업 필요?*
+          //############################# *link, node 순서 바꾸는 작업 필요?*
           overlap = {}
           //object가 받는 링크의 개수 체크 -> 링크 2개를 받고 재귀로 생성되지 않는 애는 나중에 그림
           for (var i = 0; i < linkDataArray.length; i++) {
@@ -1200,7 +1208,7 @@
                 check = linkDataArray[j]["from"].split("_")[1]
 
                 // 지금까지 link 탄 모든 주소 저장해둔거 다시 확인해서 돔
-                //#######################################################but 지금 비효율 앞에있는 인덱스는 불필요하게 계속 돔
+                //#################################but 지금 비효율 앞에있는 인덱스는 불필요하게 계속 돔
                 for (var z = 0; z < object_order.length; z++) {
                   tmp_link = object_order[z];
                   // check(from)와 이전 link (to)같으면 해당 인덱스의 "to" 부분 추가
@@ -1240,16 +1248,26 @@
             // dict["category"] = "dict";
             nodeDataArray.push(dict);
 
+            // nodeDataArray에 추가된 tempObjectFrame key들
+            var frame_token = []
             // object_order 순서대로 '객체'안의 frame(틀) 먼저 저장
             for (var i = 0; i < object_order.length; i++) {
+              //순서대로 저장
               for (var j = 0; j < tempObjectFrame.length; j++) {
                 if (object_order[i] == tempObjectFrame[j]['key']) {
                   nodeDataArray.push(tempObjectFrame[j]);
+                  frame_token.push(tempObjectFrame[j]['key']);
                 }
               }
             }
+            //나머지 저장
+            for(var j = 0; j < tempObjectFrame.length; j++){
+              if (!frame_token.includes(tempObjectFrame[j]['key'])) {
+                nodeDataArray.push(tempObjectFrame[j]);
+              }
+            }
             // dict_order 순서에 맞게 구한 후 #point_1에서 tempObjectNode와 비교할 문자열 넣은 리스트
-            token_list = []
+            dict_token = []
             //dict_order 순서대로 저장
             for (var i = 0; i < dict_order.length; i++) {
               for (var j = 0; j < tempObjectNode.length; j++) {
@@ -1257,7 +1275,7 @@
                 if (tempObjectNode[j]['category'] == "subdict") {
                   token = tempObjectNode[j]['key'].split("_")[1] // dict_order와 비교할것 추출
                   if (token == dict_order[i]) {
-                    token_list.push(tempObjectNode[j]['key']);
+                    dict_token.push(tempObjectNode[j]['key']);
                     nodeDataArray.push(tempObjectNode[j]);
                   }
                 }
@@ -1267,7 +1285,7 @@
             // #point_1
             //나머지 위에서 검사하지 않은 tempObject -> nodeDataArray에 저장 ############################################## 주의
             for (var j = 0; j < tempObjectNode.length; j++) {
-              if (!object_order.includes(tempObjectNode[j]['key']) && !token_list.includes(tempObjectNode[j]['key'])) {
+              if (!object_order.includes(tempObjectNode[j]['key']) && !dict_token.includes(tempObjectNode[j]['key'])) {
                 nodeDataArray.push(tempObjectNode[j]);
               }
             }
@@ -1278,13 +1296,13 @@
           console.log(linkDataArray)
         }
 
-        // stack 변수 그리는 함수
+        //stack 변수 그리는 함수
         //stack 그리기 -> 특정 위치에서 line 1 , line 10 위치 등등
         function drawStackLocalsNode(stack_locals, focus_link) {
           console.log("stack_locals");
           console.log(stack_locals);
 
-          // drawglobals에도 있는 변수들 무조건 같은 이름 써야함
+          // drawglobals에도 있는 변수들임 -  무조건 같은 이름 써야함
           // 임시 globalNode
           //             tempGlobalNode = [];
           // 임시 objectNode
@@ -1310,10 +1328,10 @@
             //stack_locals의 크기 만큼 dict를 생성하니 group_key 저장해둠
             stack_group_key.push(dict["key"]);
           }
-          // 생성순서 거꾸로 먼저 추가해줌
+          // 생성순서 거꾸로 먼저 추가해줌 -> 최근것이 올라오도록
           for (var i = tempStackNode.length - 1; i >= 0; i--) nodeDataArray.push(tempStackNode[i]);
 
-          //stack 생성 순서대로 검사 ###################################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
+          //stack 생성 순서대로 검사 ######################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
           for (var i = 0; i < stack_order.length; i++) {
             // 여러가지 스택 함수들 검사
             for (var j = 0; j < stack_locals.length; j++) {
@@ -1328,7 +1346,7 @@
                 //func 함수의 stack 변수 생성
                 if (isPrimitive(value)) {
                   stack_global = {};
-                  if (key == "__return__") stack_global["text"] = "Return = " + value;
+                  if (key == "__return__") stack_global["text"] = "return = " + value;
                   else stack_global["text"] = key + " = " + value;
 
                   stack_global["key"] = "stack_" + key + (j + 1);
@@ -1385,7 +1403,7 @@
             //                   dict["isGroup"] = true;
             //                   dict["category"] = "object";
             //                   nodeDataArray.push(dict);
-            //                 // object_order 순서대로 먼저 저장 ###############################stack에서도 필요?
+            //                 // object_order 순서대로 먼저 저장 ##################### stack에서도 순서대로 저장하는 로직이 필요?
             //                 for(var i=0;i<object_order.length;i++){
             //                      for(var j=0;j<tempObjectNode.length;j++){
             //                             if(object_order[i] == tempObjectNode[j]['key']){
@@ -1398,6 +1416,7 @@
                 nodeDataArray.push(tempObjectNode[j]);
               }
             }
+
           } // != 0
         }
 
@@ -1494,26 +1513,29 @@
 
             // linkedList구조에서 link 조작시 panel 별로 잘 매칭할 수 있도록
             // 즉, 전역변수가 한번 링크해서 들어가는 모든 노드들은 같은 panel에 매칭
+            // 첫 링크 정보 - global_first_ref
             if (object_ref.length >= 1) {
               // console.log("마지막 object_ref");
               // console.log(parseInt(object_ref[object_ref.length-1]));
               // console.log("현재 주소");
               // console.log(parseInt(data[1]));
-              //각 전역변수가(compound 타입 일경우) 처음 가리키는 주소 담은 배열
+
+              // 마지막 object_ref 와 현재 주소(data[1]) 값의 차이가 1이 아니고
+              // 담아둔 첫 링크와 현재주소가 같으면 새로운 패널 생성 , 아니면 패스! 더 그리지 않는다
               if (Math.abs(parseInt(object_ref[object_ref.length - 1]) - parseInt(data[1])) != 1) {
                 if (global_first_ref[global_index] != data[1]) {
-                  console.log("패스해야할 부분");
+                  console.log("패스해야할 부분 (더 그리지 않음)");
                   return;
                 }
               }
             }
 
-            //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만
+            //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만 이어주면 됨!
             if (!object_ref.includes(subObject["key"])) {
               object_ref.push(subObject["key"]);
 
               // 객체 생성 2단계
-              //1. compound 타입인게 확정났으니 그룹(새로 생성될 객체) 하나 만들어줘야함!
+              //1. compound 타입인게 확정났으니 그룹 ('LIST','DICT') 하나 만들어줘야함!
               subObject["text"] = "" + data[0];
               subObject["group"] = "" + root_group;
               subObject["isGroup"] = true
@@ -1521,13 +1543,56 @@
               else subObject["category"] = "dict";
               tempObjectFrame.push(subObject);
 
+              //2. 어떤 객체에서 포인터 객체(compound type)를 2개 이상 가지면 패널 하나 더 생성해서 구분시켜주는 선행작업
+              var isOverTwoCompoundCount = false;
+              var CompoundCount = 0;
+
+              // DICT는 key,value 2개로 이루어짐 링크가 많아봐야 1개임
+              if(data[0] != "DICT") {
+                for(var index in data){
+                  if(index >=2){
+                    //compound type이면 개수 증가
+                    if(!isPrimitive(data[index])) CompoundCount++;
+                  }
+                }
+              }
+
+              // console.log("value : "+ data[0]);
+              // console.log("ref : "+ data[1]);
+              // console.log("CompoundCount : "+ CompoundCount);
+              // 2개 이상이면 flag 변화
+              if(CompoundCount >= 2){
+                isOverTwoCompoundCount = true
+                // for(var count = 0;count<CompoundCount;count++){
+                //   object_subPanel = {}
+                //   object_subPanel["key"] = "subPanel_"+(count+1)+"_" + key;
+                //   object_subPanel["group"] = group_key;
+                //   object_subPanel["isGroup"] = true;
+                //   object_subPanel["category"] = "object_panel";
+                //   nodeDataArray.push(object_subPanel);
+                // }
+              }
+
               //2. 해당 object 값안에서 재귀로 계속 object 생성
               for (var index in data) {
                 if (index >= 2) {
                   //타입 분류
                   if (data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET") {
                     value = data[index];
-                    decode_type(value, data[1], root_group, false);
+                    if(isOverTwoCompoundCount){
+                      object_subPanel = {}
+                      object_subPanel["key"] = "subPanel_"+(panel_count+1)+"_" + data[0];
+                      object_subPanel["group"] = root_group;
+                      object_subPanel["isGroup"] = true;
+                      object_subPanel["category"] = "object_panel";
+                      tempObjectFrame.push(object_subPanel);
+                      decode_type(value, data[1], object_subPanel["key"], false);
+                      panel_count ++;
+                    }
+                    else{
+                      decode_type(value, data[1], root_group, false);
+                    }
+                    // decode_type(value, data[1], root_group, false);
                   } else if (data[0] == "DICT") {
 
                     key = data[index][0]
