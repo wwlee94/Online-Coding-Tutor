@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SourceCode Educator</title>
+  <title>Online Coding Tutor (OCT)</title>
   <!-- loading css -->
   <link rel="stylesheet" href="static/css/stairsloader.css">
   <link rel="stylesheet" href="static/css/bluespinnerloader.css">
@@ -1076,6 +1076,8 @@
           tempGlobalNode = [];
           // // 임시 Objectframe ->  {x : [1,2,3]} -> "[]"
           tempObjectFrame = [];
+          // 임시 subPanelFrame -> layer 나누기 위함 (잘 출력하려고)
+          tempSubPanelFrame = [];
           // 임시 objectNode -> {x: [1,2,3]} -> "1,2,3"
           tempObjectNode = [];
           // 임시 linkData
@@ -1234,6 +1236,9 @@
           console.log("tempObjectFrame");
           console.log(tempObjectFrame);
 
+          console.log("tempSubPanelFrame");
+          console.log(tempSubPanelFrame);
+
           console.log("tempObjectNode");
           console.log(tempObjectNode);
 
@@ -1248,22 +1253,27 @@
             // dict["category"] = "dict";
             nodeDataArray.push(dict);
 
-            // nodeDataArray에 추가된 tempObjectFrame key들
-            var frame_token = []
-            // object_order 순서대로 '객체'안의 frame(틀) 먼저 저장
+            // 1. object_order 순서대로 '객체' frame(틀) 먼저 저장
             for (var i = 0; i < object_order.length; i++) {
               //순서대로 저장
               for (var j = 0; j < tempObjectFrame.length; j++) {
                 if (object_order[i] == tempObjectFrame[j]['key']) {
                   nodeDataArray.push(tempObjectFrame[j]);
-                  frame_token.push(tempObjectFrame[j]['key']);
                 }
               }
             }
-            //나머지 저장
-            for(var j = 0; j < tempObjectFrame.length; j++){
-              if (!frame_token.includes(tempObjectFrame[j]['key'])) {
-                nodeDataArray.push(tempObjectFrame[j]);
+            // 2. subPanel 저장하기
+            // 2-1. 필요 없는 subPanel 빼기 subPanel의 key가 nodeDataArray의 "group" 와 같지않으면 없어도 되는 panel
+            // LinkedList 링크 체인지에서 나타나는 버그 해결
+            for(var i = 0; i < tempSubPanelFrame.length; i++){
+              for(var j=0;j<nodeDataArray.length;j++){
+                //패널 키 -> Ex) subPanel_LIST_No1_from_5
+                var panel_key = tempSubPanelFrame[i]["key"];
+                var group_key = nodeDataArray[j]["group"];
+                // group_key 가 panel_key와 일치하지 않으면 필요 없는 subPanel 객체
+                if(panel_key === group_key){
+                  nodeDataArray.push(tempSubPanelFrame[i]);
+                }
               }
             }
             // dict_order 순서에 맞게 구한 후 #point_1에서 tempObjectNode와 비교할 문자열 넣은 리스트
@@ -1318,7 +1328,7 @@
 
             //func stack 틀생성
             dict = {};
-            dict["key"] = "stack_" + func_name + (i + 1);
+            dict["key"] = "stack_" + func_name +"_"+ (i + 1);
             dict["text"] = func_name;
             dict["color"] = "black";
             dict["group"] = "프레임"
@@ -1544,15 +1554,24 @@
               tempObjectFrame.push(subObject);
 
               //2. 어떤 객체에서 포인터 객체(compound type)를 2개 이상 가지면 패널 하나 더 생성해서 구분시켜주는 선행작업
-              var isOverTwoCompoundCount = false;
-              var CompoundCount = 0;
-
+              var isOverTwoCompoundCount = false; // 한 노드내에 다른 노드를 가르키는 객체가 2개 이상일때 true
+              var CompoundCount = 0;              // 다른 노드를 가르키는 개수
+              // var overlapCompound = [];           // 링크 받는 노드 개수
               // DICT는 key,value 2개로 이루어짐 링크가 많아봐야 1개임
               if(data[0] != "DICT") {
                 for(var index in data){
+                  // var ref = data[1]
                   if(index >=2){
-                    //compound type이면 개수 증가
-                    if(!isPrimitive(data[index])) CompoundCount++;
+                    //compound type이면
+                    if(!isPrimitive(data[index])) {
+                      // if(Math.abs(parseInt(ref) - parseInt(data[index][1])) != 1){
+                      //   overlapCompound.push(ref)  // 추가
+                      //   console.log("overlapCompound");
+                      //   console.log(ref)
+                      //   console.log(data[index][1]);
+                      // }
+                      CompoundCount++; //개수 증가
+                    }
                   }
                 }
               }
@@ -1560,18 +1579,8 @@
               // console.log("value : "+ data[0]);
               // console.log("ref : "+ data[1]);
               // console.log("CompoundCount : "+ CompoundCount);
-              // 2개 이상이면 flag 변화
-              if(CompoundCount >= 2){
-                isOverTwoCompoundCount = true
-                // for(var count = 0;count<CompoundCount;count++){
-                //   object_subPanel = {}
-                //   object_subPanel["key"] = "subPanel_"+(count+1)+"_" + key;
-                //   object_subPanel["group"] = group_key;
-                //   object_subPanel["isGroup"] = true;
-                //   object_subPanel["category"] = "object_panel";
-                //   nodeDataArray.push(object_subPanel);
-                // }
-              }
+              // 한 노드내에서 2개 이상 자신과 같거나 다른 객체를 가지면 flag 변화
+              if(CompoundCount >= 2) isOverTwoCompoundCount = true
 
               //2. 해당 object 값안에서 재귀로 계속 object 생성
               for (var index in data) {
@@ -1579,15 +1588,23 @@
                   //타입 분류
                   if (data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET") {
                     value = data[index];
-                    if(isOverTwoCompoundCount){
+                    // 한 노드내에서 2가지 이상 자신과 같거나 다른 노드가 있는 경우 + 현재 값이 compound type인 경우
+
+                    // 진행 중 -> linkedList 빈값 에러
+                    //&& !overlapCompound.includes(data[index][1])
+
+                    if(isOverTwoCompoundCount && !isPrimitive(value)){
+
                       object_subPanel = {}
-                      object_subPanel["key"] = "subPanel_"+(panel_count+1)+"_" + data[0];
+                      // object_subPanel["text"] = (panel_count+1) + "_" + data[0]
+                      object_subPanel["key"] = "subPanel_"+ data[0] +"_No" + (panel_count+1) + "_from_" + data[1];
                       object_subPanel["group"] = root_group;
                       object_subPanel["isGroup"] = true;
                       object_subPanel["category"] = "object_panel";
-                      tempObjectFrame.push(object_subPanel);
+                      tempSubPanelFrame.push(object_subPanel);
                       decode_type(value, data[1], object_subPanel["key"], false);
                       panel_count ++;
+
                     }
                     else{
                       decode_type(value, data[1], root_group, false);
