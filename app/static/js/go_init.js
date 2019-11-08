@@ -47,7 +47,7 @@ function init() {
         $$(go.TextBlock,{
            // margin: new go.Margin(0, 0, 0, 0),
            isMultiline: false,
-           font: "bold 7pt sans-serif"
+           font: "bold italic 7pt sans-serif"
         },
         new go.Binding("text", "index")),
         $$(go.Panel,"Auto",
