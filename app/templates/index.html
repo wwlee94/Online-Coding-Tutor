@@ -56,7 +56,9 @@
     }
 
     /* CSS */
-    .tab { white-space: pre; }
+    .tab {
+      white-space: pre;
+    }
 
     /* page-loader , debug-loader css 설정 */
     .h1-debug {
@@ -245,7 +247,7 @@
 
     <!-- go.js -->
     <script src="static/js/go.js"></script>
-    <script src="static/js/go_init.js"></script>
+    <script src="static/js/go_init.js?ver=7"></script>
 
     <!-- inner script -->
     <script type="text/javascript" charset="utf-8">
@@ -274,10 +276,11 @@
       var color_list = ["lightblue", "#4CAE4C", "#F0AD4E", "pink", "#5BC0DE", "lightcoral"]
       //color index
       var color_index = 0
-      //DICT 타입인지 아닌지
-      var isDictType = false
-
-      //subpanel의 개수 -> ObjectPanel안의 패널 개수
+      // Object(객체)들의 index Ex) List의 첫번째, 두번째 index
+      var node_index = {};
+      // 현재 객체가 어떤 타입인지 명시 Ex) "LIST", "DICT", "FUNCTION" ...
+      var isNodeType = ""
+      //subpanel의 개수 -> ObjectPanel안의 vertical한 패널 개수
       var panel_count = 0
 
       //go.js 변수 선언
@@ -325,7 +328,7 @@
         theme: "darcula",
         scrollbarStyle: "simple",
         extraKeys: { //키설정
-          Tab : betterTab
+          Tab: betterTab
           // "Tab": "autocomplete",
           // tab 수정 대신 indentUnit 수정함
           // "Tab": function(cm){
@@ -407,7 +410,7 @@
           //view 조정
           $("#print_view").show('slow');
           $("#pdb_view").hide('slow');
-          $("#example_view").hide('slow');
+          $("#example_view").hide('fast');
           $("#myDiagramDiv").show('slow');
           $("#viz_step_view").show('slow');
 
@@ -429,7 +432,7 @@
           //view 조정
           $("#print_view").show('slow');
           $("#pdb_view").hide('slow');
-          $("#example_view").hide('slow');
+          $("#example_view").hide('fast');
           $('#myDiagramDiv').hide('slow');
           $("#viz_step_view").hide('slow');
 
@@ -452,7 +455,7 @@
           //view 조정
           $("#print_view").show('slow');
           $("#pdb_view").hide('slow');
-          $("#example_view").hide('slow');
+          $("#example_view").hide('fast');
           $('#myDiagramDiv').hide('slow');
           $("#viz_step_view").hide('slow');
 
@@ -468,7 +471,7 @@
         $("#stop").on('click', function(e) {
           $("#print_view").hide('slow');
           $("#pdb_view").hide('slow');
-          $("#example_view").hide('slow');
+          $("#example_view").hide('fast');
           $('#myDiagramDiv').hide('slow');
           $("#viz_step_view").hide('slow');
 
@@ -495,12 +498,12 @@
         })(jQuery);
 
         // show, hide 트리거 이벤트
-        $('#example_view').on('show', function() {
+        $('#example_view').on('fadeIn', function() {
           console.log("trigger event!!!!!!!!")
           $('#example_view').attr('toggle', '1')
         });
 
-        $('#example_view').on('hide', function() {
+        $('#example_view').on('fadeOut', function() {
           $('#example_view').attr('toggle', '0')
         });
 
@@ -508,9 +511,9 @@
         $("#example").on('click', function(e) {
           ex_toggle = $('#example_view').attr('toggle');
           if (ex_toggle == '0') {
-            $('#example_view').show('slow');
+            $('#example_view').fadeIn('slow');
           } else {
-            $('#example_view').hide('slow');
+            $("#example_view").hide('fast');
           }
         });
 
@@ -634,7 +637,7 @@
 
           //stack_locals 시각화 길이 0이면 안그림
           if (stack_locals.length != 0) {
-            // 현재 진행 중인 스택은 focus 주기
+            // 현재 진행 중인 스택 함수에(함수 이름 저장해서) focus 주기
             focus_link = stack_locals[0][0];
             console.log(focus_link);
             drawStackLocalsNode(stack_locals, focus_link);
@@ -737,7 +740,7 @@
           cm_printer.setCursor(cm_printer.lineCount(), 0);
 
           //Global, object 시각화
-          drawGlobalsObjectsNode(globals,false);
+          drawGlobalsObjectsNode(globals, false);
           //             //stack_locals 시각화
           //             drawStackLocalsNode(stack_locals);
           myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
@@ -795,7 +798,7 @@
           cm_printer.setValue("");
           $("#pdb_view").hide('slow');
           $("#print_view").hide('slow');
-          $("#example_view").hide('slow');
+          $("#example_view").hide('fast');
           $("#myDiagramDiv").hide('slow');
           $("#viz_step_view").hide('slow');
         });
@@ -1050,11 +1053,14 @@
           linkDataArray = [];
           // 색상 초기화
           color_index = 0;
-          //subpanel 개수 초기화
+          //subpanel의 개수(ObjectPanel안의 vertical한 패널 개수)를 다시 0으로 초기화
           panel_count = 0;
 
+          console.log("current globals")
+          console.log(globals)
+          var globals_length = Object.keys(globals).length;
           // 전역변수 생성안되어 있으면 최상위 프레임인(프레임,전역변수,객체) 도 그리지 않음
-          if (global_order.length != 0 && global_order.length != undefined) {
+          if (globals_length != 0 && globals_length != undefined) {
             //'프레임' frame 생성
             dict = {};
             dict["key"] = "프레임";
@@ -1157,6 +1163,8 @@
               }
             } // hasOwnProperty
           });
+
+          //dict 내 key, value 순서
           console.log("dict_ref");
           console.log(dict_ref);
           //전체 object 주소들 저장
@@ -1233,6 +1241,9 @@
           console.log("object_order");
           console.log(object_order);
 
+          console.log("tempGlobalNode");
+          console.log(tempGlobalNode);
+
           console.log("tempObjectFrame");
           console.log(tempObjectFrame);
 
@@ -1263,22 +1274,24 @@
               }
             }
             // 2. subPanel 저장하기
-            // 2-1. 필요 없는 subPanel 빼기 subPanel의 key가 nodeDataArray의 "group" 와 같지않으면 없어도 되는 panel
+            // 2-1. 필요 없는 subPanel 빼기
+            // -> nodeDataArray를 돌면서 추가된 subpanel 중에서 subpanel를 참조하는 노드가 없다면 안쓰는 subpanel이니 해당 subpanel 빼고 추가
             // LinkedList 링크 체인지에서 나타나는 버그 해결
-            for(var i = 0; i < tempSubPanelFrame.length; i++){
-              for(var j=0;j<nodeDataArray.length;j++){
+            for (var i = 0; i < tempSubPanelFrame.length; i++) {
+              for (var j = 0; j < nodeDataArray.length; j++) {
                 //패널 키 -> Ex) subPanel_LIST_No1_from_5
                 var panel_key = tempSubPanelFrame[i]["key"];
                 var group_key = nodeDataArray[j]["group"];
                 // group_key 가 panel_key와 일치하지 않으면 필요 없는 subPanel 객체
-                if(panel_key === group_key){
+                if (panel_key === group_key) {
                   nodeDataArray.push(tempSubPanelFrame[i]);
                 }
               }
             }
-            // dict_order 순서에 맞게 구한 후 #point_1에서 tempObjectNode와 비교할 문자열 넣은 리스트
+            // *DICT를 표현할때 선언 순서에 맞게, 또 올바르게 표현하기 위한 작업*
+            // #point_1에서 dict_order 순서대로 저장 후 point_2에서 저장하지 않은 나머지 저장하기 위한 리스트
             dict_token = []
-            //dict_order 순서대로 저장
+            // #point_1 - dict_order 순서대로 저장
             for (var i = 0; i < dict_order.length; i++) {
               for (var j = 0; j < tempObjectNode.length; j++) {
                 // subdict부분만 조정하면 됨
@@ -1292,7 +1305,7 @@
               }
             }
 
-            // #point_1
+            // #point_2
             //나머지 위에서 검사하지 않은 tempObject -> nodeDataArray에 저장 ############################################## 주의
             for (var j = 0; j < tempObjectNode.length; j++) {
               if (!object_order.includes(tempObjectNode[j]['key']) && !dict_token.includes(tempObjectNode[j]['key'])) {
@@ -1328,7 +1341,7 @@
 
             //func stack 틀생성
             dict = {};
-            dict["key"] = "stack_" + func_name +"_"+ (i + 1);
+            dict["key"] = "stack_" + func_name + "_" + (i + 1);
             dict["text"] = func_name;
             dict["color"] = "black";
             dict["group"] = "프레임"
@@ -1347,7 +1360,7 @@
             for (var j = 0; j < stack_locals.length; j++) {
               stack_variable = stack_locals[j];
               //stack_variable[0] -> 함수 이름 / stack_variable[1] -> 스택 변수들
-              // 각각의 함수들 중 stack_order값을 포함하고 있다면 추가
+              // 각각의 함수들 중 stack_order(stack 변수 생성 순서)값을 포함하고 있다면 추가
               if (stack_variable[1].hasOwnProperty(stack_order[i])) {
                 func_name = stack_variable[0];
                 key = stack_order[i];
@@ -1466,22 +1479,45 @@
 
           // 프리미티브이면 생성
           if (isPrimitive(data)) {
-            //문자열로 되어있으면 '' 추가
-            if (typeof(data) === typeof("")) data = "'" + data + "'";
-            //python에선 null -> None으로 표현
-            if (data == null) data = "None";
-            //DICT 타입이면 -> decode_type 함수를 (type == DICT)에서 호출한 경우
-            if (isDictType) {
-              text = data + " : ";
-              data = ""
-            } else text = "" + data
-
+            var tmpData = "";
             //primitive 객체 생성
             subObject = {}
+
+            //문자열로 되어있으면 '' 추가
+            if (typeof(data) === typeof("")) tmpData = "'" + data + "'";
+            //python에선 null -> None으로 표현
+            else if (data == null) tmpData = "None";
+            else tmpData = data;
+
+            //DICT 타입이면 -> decode_type 함수를 (type == DICT)에서 호출한 경우
+            if (isNodeType === "DICT") {
+              text = tmpData + " : ";
+              data = ""
+            }
+            //Function 타입이면
+            else if(isNodeType === "FUNCTION"){
+              // FUNCTION은 '' 빼려고 data 대입
+              text = "" + data
+            }
+            else {
+              text = "" + tmpData
+
+              //head 선언
+              subObject["index"] = node_index[group_key]++;
+
+              console.log("group_key")
+              console.log(group_key)
+              console.log("node_index")
+              console.log(node_index)
+              subObject["category"] = "objectNode";
+            }
+
+            //subObject 세부 설정
             subObject["key"] = "data_" + group_key + "_" + data;
             subObject["text"] = text
             subObject["color"] = color_list[++color_index % color_list.length];
             subObject["group"] = "" + group_key;
+
             tempObjectNode.push(subObject);
             return;
           } else {
@@ -1499,6 +1535,12 @@
               tmpObject["text"] = "*";
               tmpObject["color"] = color_list[color_index % color_list.length];
               tmpObject["group"] = "" + group_key;
+
+              if (isNodeType !== "DICT") {
+                //head 선언
+                tmpObject["index"] = node_index[group_key]++;
+                tmpObject["category"] = "objectNode";
+              }
               tempObjectNode.push(tmpObject);
 
               //전역 - 객체 링크
@@ -1543,9 +1585,10 @@
             //이미 도착 주소가 할당되어 있는 객체는 만들필요? X -> 바로 위에서 설정한 포인터만 이어주면 됨!
             if (!object_ref.includes(subObject["key"])) {
               object_ref.push(subObject["key"]);
+              node_index[subObject["key"]] = 0;
 
               // 객체 생성 2단계
-              //1. compound 타입인게 확정났으니 그룹 ('LIST','DICT') 하나 만들어줘야함!
+              //1. compound 타입인게 확정났으니 그룹 ('LIST','DICT' 등등) 하나 만들어줘야함!
               subObject["text"] = "" + data[0];
               subObject["group"] = "" + root_group;
               subObject["isGroup"] = true
@@ -1553,25 +1596,17 @@
               else subObject["category"] = "dict";
               tempObjectFrame.push(subObject);
 
-              //2. 어떤 객체에서 포인터 객체(compound type)를 2개 이상 가지면 패널 하나 더 생성해서 구분시켜주는 선행작업
+              //2. *어떤 객체에서 포인터 객체(compound type)를 2개 이상 가지면 패널 하나 더 생성해서 layer를 나눠 구분시켜주는 선행작업*
               var isOverTwoCompoundCount = false; // 한 노드내에 다른 노드를 가르키는 객체가 2개 이상일때 true
-              var CompoundCount = 0;              // 다른 노드를 가르키는 개수
-              // var overlapCompound = [];           // 링크 받는 노드 개수
+              var CompoundCount = 0; // 다른 노드를 가르키는 개수
+
               // DICT는 key,value 2개로 이루어짐 링크가 많아봐야 1개임
-              if(data[0] != "DICT") {
-                for(var index in data){
+              if (data[0] != "DICT") {
+                for (var index in data) {
                   // var ref = data[1]
-                  if(index >=2){
+                  if (index >= 2) {
                     //compound type이면
-                    if(!isPrimitive(data[index])) {
-                      // if(Math.abs(parseInt(ref) - parseInt(data[index][1])) != 1){
-                      //   overlapCompound.push(ref)  // 추가
-                      //   console.log("overlapCompound");
-                      //   console.log(ref)
-                      //   console.log(data[index][1]);
-                      // }
-                      CompoundCount++; //개수 증가
-                    }
+                    if (!isPrimitive(data[index])) CompoundCount++; //개수 증가
                   }
                 }
               }
@@ -1580,7 +1615,7 @@
               // console.log("ref : "+ data[1]);
               // console.log("CompoundCount : "+ CompoundCount);
               // 한 노드내에서 2개 이상 자신과 같거나 다른 객체를 가지면 flag 변화
-              if(CompoundCount >= 2) isOverTwoCompoundCount = true
+              if (CompoundCount >= 2) isOverTwoCompoundCount = true
 
               //2. 해당 object 값안에서 재귀로 계속 object 생성
               for (var index in data) {
@@ -1589,25 +1624,26 @@
                   if (data[0] == "LIST" || data[0] == "TUPLE" || data[0] == "SET") {
                     value = data[index];
                     // 한 노드내에서 2가지 이상 자신과 같거나 다른 노드가 있는 경우 + 현재 값이 compound type인 경우
-
-                    // 진행 중 -> linkedList 빈값 에러
-                    //&& !overlapCompound.includes(data[index][1])
-
-                    if(isOverTwoCompoundCount && !isPrimitive(value)){
+                    // layer를 나누어주는 패널하나 생성해줌
+                    if (isOverTwoCompoundCount && !isPrimitive(value)) {
 
                       object_subPanel = {}
-                      // object_subPanel["text"] = (panel_count+1) + "_" + data[0]
-                      object_subPanel["key"] = "subPanel_"+ data[0] +"_No" + (panel_count+1) + "_from_" + data[1];
+                      object_subPanel["key"] = "subPanel_" + data[0] + "_No" + (panel_count + 1) + "_from_" + data[1];
                       object_subPanel["group"] = root_group;
                       object_subPanel["isGroup"] = true;
                       object_subPanel["category"] = "object_panel";
                       tempSubPanelFrame.push(object_subPanel);
-                      decode_type(value, data[1], object_subPanel["key"], false);
-                      panel_count ++;
 
-                    }
-                    else{
+                      isNodeType = "LIST,TUPLE,SET"
+                      decode_type(value, data[1], object_subPanel["key"], false);
+                      isNodeType = ""
+
+                      panel_count++;
+
+                    } else {
+                      isNodeType = "LIST,TUPLE,SET"
                       decode_type(value, data[1], root_group, false);
+                      isNodeType = ""
                     }
                     // decode_type(value, data[1], root_group, false);
                   } else if (data[0] == "DICT") {
@@ -1640,10 +1676,10 @@
                         tempObjectNode.push(subObject);
                       } else {
                         //true이면 "'key' : ??" 형태로 출력하기 위함
-                        isDictType = true
+                        isNodeType = "DICT"
                         decode_type(key, subdict["key"], root_group, true); //key는 compound type이 될수 없으니 링크없이
-                        isDictType = false
                         decode_type(value, subdict["key"], root_group, false);
+                        isNodeType = ""
                       }
                     }
                   }
@@ -1667,7 +1703,10 @@
                     if (!isFind) {
                       value = func_name + "()";
                     }
+                    //함수 타입임을 알려줌
+                    isNodeType = "FUNCTION";
                     decode_type(value, data[1], root_group, false);
+                    isNodeType = "";
                   } //else
                 } // >=2
               } //for

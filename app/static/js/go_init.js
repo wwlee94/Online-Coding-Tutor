@@ -1,8 +1,8 @@
 //go.js 기본 설정
 function init() {
 
-  // 노드 디자인 + 기능
-  myDiagram.nodeTemplate =
+  // Global(전역 변수) 노드 디자인 + 기능
+  var globalNode =
     $$(go.Node, "Auto", // the Shape will go around the TextBlock
       {
         click: function(e, node) {
@@ -11,7 +11,8 @@ function init() {
         // fromSpot: go.Spot.RightSide,
         // toSpot: go.Spot.LeftSide,
       },
-      $$(go.Shape, "RoundedRectangle", {
+      $$(go.Panel,"Auto",
+        $$(go.Shape, "RoundedRectangle", {
           fill: "black", // the default fill, if there is no data bound value
           //                   portId: "", cursor: "pointer", // the Shape is the port, not the whole Node
           // allow all kinds of links from and to this port
@@ -30,7 +31,52 @@ function init() {
         },
         new go.Binding("stroke", "text_stroke"),
         new go.Binding("text", "text"))
+      )
     );
+
+    // Object(객체) 노드 디자인 + 기능
+    var objectNode =
+      $$(go.Node, "Vertical", // the Shape will go around the TextBlock
+        {
+          click: function(e, node) {
+            showConnections(node);
+          } // defined below
+          // fromSpot: go.Spot.RightSide,
+          // toSpot: go.Spot.LeftSide,
+        },
+        $$(go.TextBlock,{
+           // margin: new go.Margin(0, 0, 0, 0),
+           isMultiline: false,
+           font: "bold 7pt sans-serif"
+        },
+        new go.Binding("text", "index")),
+        $$(go.Panel,"Auto",
+          $$(go.Shape, "RoundedRectangle", {
+            fill: "black", // the default fill, if there is no data bound value
+            //                   portId: "", cursor: "pointer", // the Shape is the port, not the whole Node
+            // allow all kinds of links from and to this port
+            //                   fromLinkable: true,
+            //                   toLinkable: true
+          },
+          new go.Binding("stroke", "stroke"),
+          // Shape.fill is bound to Node.data.color
+          new go.Binding("fill", "color")),
+        $$(go.TextBlock, {
+            font: "bold 14px sans-serif",
+            stroke: 'black',
+            margin: 5, // make some extra space for the shape around the text
+            isMultiline: false, // don't allow newlines in text
+            // TextBlock.text is bound to Node.data.key
+          },
+          new go.Binding("stroke", "text_stroke"),
+          new go.Binding("text", "text"))
+        )
+      );
+
+    var templmap = new go.Map(); // In TypeScript you could write: new go.Map<string, go.Node>();
+    templmap.add("", globalNode);
+    templmap.add("objectNode", objectNode);
+    myDiagram.nodeTemplateMap = templmap;
 
   //링크 디자인 + 기능
   myDiagram.linkTemplate =
