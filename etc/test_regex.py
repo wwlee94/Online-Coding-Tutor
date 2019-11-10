@@ -17,7 +17,3 @@ findall = p.findall(string)
 print findall
 out = p_num.search(findall[0])
 print out.group()
-
-
-
-

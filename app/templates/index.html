@@ -50,7 +50,7 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: rgb(28, 28, 28);
+      background-color: #1E1F20;
       color: #ffffff;
       margin-top: 5px;
     }
@@ -207,7 +207,7 @@
         <div id="print_view" style="display:none;">
           <p style="color:white">출력 결과</p>
           <!--출력부분-->
-          <textarea id="printer"></textarea>
+          <textarea id="printer" style="background:#0E1628; color:#0E1628; background-color:#0E1628"></textarea>
         </div>
 
         <br />
@@ -818,8 +818,12 @@
             $("#myDiagramDiv").hide();
             $("#viz_step_view").hide();
           }
-          // 200스탭 넘으면 에러처리
-          //msg['data'].includes('exception_msg')||
+          else if(msg['data'].includes('exception_msg')){
+            cm_printer.setValue(msg['data']);
+            $("#myDiagramDiv").hide();
+            $("#viz_step_view").hide();
+          }
+          // 기타 에러 + 200스탭 넘으면 에러처리
           else if (msg['data'].includes('uncaught_exception')) {
             temp = JSON.parse(msg['data']);
             jsonArray = temp[0]
@@ -1018,7 +1022,8 @@
           $('.page-loader').fadeOut();
           $('.debug-loader').fadeOut();
           $('html').css({
-            'background-color': 'rgb(28,28,28)'
+            // 'background-color': 'rgb(28,28,28)'
+            'background-color' : '#1E1F20'
           });
           cm_editor.refresh();
           cm_printer.refresh();

@@ -6,6 +6,8 @@ def set_max_executed_lines(m):
     global MAX_EXECUTED_LINES
     MAX_EXECUTED_LINES = m
 
+IS_MAX_EXECUTED_LINES = False
+
 import sys
 import bdb # 가장 중요한 import
 import os
@@ -121,6 +123,7 @@ class PGLogger(bdb.Bdb):
 
     #interaction 함수!!
     def interaction(self, frame, traceback, event_type):
+        global IS_MAX_EXECUTED_LINES
         #위의 setup 함수 불림
         self.setup(frame, traceback)
         #현재 index에 위치한 stack 정보 가져옴
@@ -196,9 +199,10 @@ class PGLogger(bdb.Bdb):
 
         if len(self.trace) >= MAX_EXECUTED_LINES:
             self.trace.append(dict(event='instruction_limit_reached',
-                                  exception_msg=' (stopped after) '+str(MAX_EXECUTED_LINES)+' steps to prevent possible infinite while loop'))
-            return
+                                exception_msg=' (stopped after) '+str(MAX_EXECUTED_LINES)+' steps to prevent possible infinite while loop'))
             # sys.exit(0) # 실행 종료
+            self.finalize()
+            return
 
         #초기화
         self.forget()
@@ -230,27 +234,27 @@ class PGLogger(bdb.Bdb):
                        "__builtins__" : user_builtins,
                        "__stdout__" : user_stdout}
 
-        # try:
+        try:
             # bdp를 실행시킨것
-        self.run(script_str, user_globals, user_globals)
+            self.run(script_str, user_globals, user_globals)
         # except SystemExit:
         #     raise bdb.BdbQuit
-#         #다른 어떤 오류가 발생할때
-#         except Exception:
-#             trace_back = sys.exc_info()
-#             trace_entry = collections.OrderedDict()
-#             trace_entry['line'] = format(trace_back[2].tb_lineno)
-#             trace_entry['event'] = 'uncaught_exception'
-#             trace_entry['exception_type'] = str(trace_back[0])
-#             trace_entry['message'] = str(trace_back[1])
-#             trace_entry['filename'] = __file__
-#             self.trace.append(trace_entry)
+        #다른 어떤 오류가 발생할때
+        except:
+            trace_back = sys.exc_info()
 
-# #             trace_entry = dict(event='uncaught_exception')
+            trace_entry = collections.OrderedDict()
+            trace_entry['line'] = format(trace_back[2].tb_lineno)
+            trace_entry['event'] = 'uncaught_exception'
+            trace_entry['exception_type'] = str(trace_back[0])
+            trace_entry['message'] = str(trace_back[1])
+            trace_entry['filename'] = __file__
+            self.trace.append(trace_entry)
 
-# #             self.trace.append(trace_entry)
-# #             self.finalize()
-#             return
+            # trace_entry = dict(event='uncaught_exception')
+            # self.trace.append(trace_entry)
+            self.finalize()
+            return
 
     #최종 검사 단계 -> 라인수 초과되진 않았는지 검사
     def finalize(self):
@@ -262,7 +266,7 @@ class PGLogger(bdb.Bdb):
         이것들은 파일과 같은 객체입니다.
         '''
         sys.stdout = sys.__stdout__
-        assert len(self.trace) <= (MAX_EXECUTED_LINES + 1)
+        # assert len(self.trace) <= (MAX_EXECUTED_LINES + 1)
 
         # filter all entries after 'return' from '<module>', since they
         res = []

@@ -164,19 +164,36 @@ def run_request(message):
         fid.write(string)
     fid.close()
     cmd = [python_v,'/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
-    fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
-    #data = fd_popen.read().strip()
-    #fd_popen.close()
-    out , err = fd_popen.communicate()
-    if err == "":
-        print (out)
-        out = out.strip()
-        out = python_version(python_v) + out #sys.version -> python version
-        emit("run_response", {'data': out})
-    elif err != "":
-        print (err)
-        emit("run_response", {'data': err})
+    try:
+        fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
+        #data = fd_popen.read().strip()
+        #fd_popen.close()
+        out , err = fd_popen.communicate(timeout = 5)
+        if err == "":
+            print (out)
+            out = out.strip()
+            out = python_version(python_v) + out #sys.version -> python version
+            emit("run_response", {'data': out})
+        elif err != "":
+            print (err)
+            emit("run_response", {'data': err})
+    except OSError as e:
+        print "< OSError > ",e.errno
+        print "< OSError > ",e.strerror
+        print "< OSError > ",e.filename
+        fd_popen.terminate()
+        fd_popen.wait()
+    except:
+        msg = "< Error > "+ str(sys.exc_info()[0]) + '\n' +"Failed compiling !!\n" +"응답 시간이 만료되었습니다. 잠시 후에 다시 시도해주세요."
+        fd_popen.kill()
+        outs, errs = fd_popen.communicate()
+        emit("run_response",{'data': msg})
+        return False
+    if fd_popen.returncode != 0:
+        msg = 'Failed compiling "{}": \n\nstderr: {}\nstdout: {}'.format(
+            full_path, errs.decode('utf-8'), outs.decode('utf-8'))
+        raise BadProtobuf(msg)
 
 #debug_request -> Debug버튼 클릭시 서버에서 PDB 실행
 @socketio.on('debug_request')
@@ -386,4 +403,4 @@ def get_example_file():
                               'mtime':time_ko,'content':content})
     return file_list_py
 if __name__ == '__main__':
-    socketio.run(app,host='0.0.0.0',port=5000,debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
