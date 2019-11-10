@@ -6,4 +6,4 @@ j = [[9,10,11],(12,13,14)]
 print (type(x))
 print (x)
 print (z)
-print (j)
+print j

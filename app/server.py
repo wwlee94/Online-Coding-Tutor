@@ -2,6 +2,7 @@
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
+sys.path.append('/home/ubuntu/sv_flask/app/docker') # 모듈 경로 추가
 
 import os
 import re
@@ -13,9 +14,11 @@ app.secret_key = "secret"
 # app.config.update(
 #     PERMANENT_SESSION_LIFETIME = 5)
 socketio = SocketIO(app)
+
 #visualize code to json
 import sv_logger
 import json
+import docker_container
 
 #subprocess / flag
 import subprocess
@@ -114,7 +117,6 @@ def vizualize_request(message):
     string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
     python_v = check_version(message['version'])
     print (string)
-    print (python_v)
     print ("viz_request : python compile !!")
     try:
         if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
@@ -128,21 +130,34 @@ def vizualize_request(message):
     if os.path.isfile(filepath):
         fid.write(string)
     fid.close()
-    cmd = [python_v,'/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
-    fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
-    #data = fd_popen.read().strip()
-    #fd_popen.close()
-    out , err = fd_popen.communicate()
-    print (out)
-    print ("visualize data")
-    if err == "":
-        viz_data = execute_return_json(cmd[1])
+
+    path = './' + session['username'] + '.py'
+    res = docker_container.run(python_v, path)
+    if res['state'] == 'success':
+        viz_path = '/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py'
+        viz_data = execute_return_json(viz_path)
         print (viz_data)
         emit("viz_response", {'data': viz_data})
-    elif err != "":
-        print (err)
-        emit("viz_response", {'data': err})
+    else:
+        stderr = res['stderr']
+        emit("viz_response", {'data' : stderr})
+
+    # old version : Use AWS Ubuntu python module
+    # cmd = [python_v,'/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
+    # fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    # #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
+    # #data = fd_popen.read().strip()
+    # #fd_popen.close()
+    # out , err = fd_popen.communicate()
+    # print (out)
+    # print ("visualize data")
+    # if err == "":
+    #     viz_data = execute_return_json(cmd[1])
+    #     print (viz_data)
+    #     emit("viz_response", {'data': viz_data})
+    # elif err != "":
+    #     print (err)
+    #     emit("viz_response", {'data': err})
 
 #run_request -> Run 버튼 클릭시 .py 컴파일 후 결과값 리턴
 @socketio.on('run_request')
@@ -163,37 +178,49 @@ def run_request(message):
     if os.path.isfile(filepath):
         fid.write(string)
     fid.close()
-    cmd = [python_v,'/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
-    try:
-        fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
-        #data = fd_popen.read().strip()
-        #fd_popen.close()
-        out , err = fd_popen.communicate(timeout = 5)
-        if err == "":
-            print (out)
-            out = out.strip()
-            out = python_version(python_v) + out #sys.version -> python version
-            emit("run_response", {'data': out})
-        elif err != "":
-            print (err)
-            emit("run_response", {'data': err})
-    except OSError as e:
-        print "< OSError > ",e.errno
-        print "< OSError > ",e.strerror
-        print "< OSError > ",e.filename
-        fd_popen.terminate()
-        fd_popen.wait()
-    except:
-        msg = "< Error > "+ str(sys.exc_info()[0]) + '\n' +"Failed compiling !!\n" +"응답 시간이 만료되었습니다. 잠시 후에 다시 시도해주세요."
-        fd_popen.kill()
-        outs, errs = fd_popen.communicate()
-        emit("run_response",{'data': msg})
-        return False
-    if fd_popen.returncode != 0:
-        msg = 'Failed compiling "{}": \n\nstderr: {}\nstdout: {}'.format(
-            full_path, errs.decode('utf-8'), outs.decode('utf-8'))
-        raise BadProtobuf(msg)
+
+    # docker run
+    path = './' + session['username'] + '.py'
+    res = docker_container.run(python_v, path)
+    if res['state'] == 'success':
+        stdout = res['stdout']
+        stdout = stdout.strip()
+        stdout = python_version(python_v) + stdout  #sys.version -> python version
+        print(stdout)
+        emit("run_response", {'data' : stdout})
+    else:
+        stderr = res['stderr']
+        print(stderr)
+        emit("run_response", {'data' : stderr})
+
+    # old version : Use AWS Ubuntu python module
+    # cmd = [python_v,'/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
+    # try:
+    #     fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    #     #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
+    #     #data = fd_popen.read().strip()
+    #     #fd_popen.close()
+    #     out , err = fd_popen.communicate(timeout = 5)
+    #     if err == "":
+    #         print (out)
+    #         out = out.strip()
+    #         out = python_version(python_v) + out #sys.version -> python version
+    #         emit("run_response", {'data': out})
+    #     elif err != "":
+    #         print (err)
+    #         emit("run_response", {'data': err})
+    # except OSError as e:
+    #     print "< OSError > ",e.errno
+    #     print "< OSError > ",e.strerror
+    #     print "< OSError > ",e.filename
+    #     fd_popen.terminate()
+    #     fd_popen.wait()
+    # except:
+    #     msg = "< Error > "+ str(sys.exc_info()[0]) + '\n' +"Failed compiling !!\n" +"응답 시간이 만료되었습니다. 잠시 후에 다시 시도해주세요."
+    #     fd_popen.kill()
+    #     outs, errs = fd_popen.communicate()
+    #     emit("run_response",{'data': msg})
+    #     return False
 
 #debug_request -> Debug버튼 클릭시 서버에서 PDB 실행
 @socketio.on('debug_request')
@@ -216,6 +243,14 @@ def debug_request(message):
     if os.path.isfile(filepath):
         fid.write(string)
     fid.close()
+
+    # 임시 보안 -> docker 실행환경으로 리팩토링 해야함
+    # reg = re.compile("^import.*$") # 모두 방지
+    reg = re.compile("^import\s(os|sys|subprocess)$") # os,sys 방지
+    if reg:
+        emit("debug_response", {'fail': "Debugging 기능은 os, sys, subprocess 시스템 모듈을 지원하지 않습니다."})
+        return False
+
     cmd = [python_v,'-m','pdb','/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
     fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
     #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
@@ -342,7 +377,7 @@ def python_version(version):
     return out
 def check_version(str):
     if str in "python 2.7":
-        return "python"
+        return "python2"
     elif str in "python 3.6":
         return "python3"
 #콘솔 결과값에 (pdb) 뒤에 줄바꿈 추가함수

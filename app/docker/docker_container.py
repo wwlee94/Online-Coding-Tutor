@@ -15,7 +15,7 @@ import docker # Docker SDK for Python
 '''
 
 # docker container 실행
-def run(user_file_path, language = "python", image_name = "buildtest", mem_limit = "64m", cpu_shares = "1024"):
+def run(language, user_file_path, image_name = "buildtest", mem_limit = "64m", cpu_shares = "1024"):
 
     # # 파라미터 가져오기
     # user_file_path = sys.argv[1]
@@ -43,8 +43,6 @@ def run(user_file_path, language = "python", image_name = "buildtest", mem_limit
     print("stop Container")
     container.stop(timeout = 5)
     exit_code = container.wait()
-    print("exit_code")
-    print(exit_code)
 
     stat_code = exit_code['StatusCode'] # 에러 코드
     exc_msg = exit_code['Error'] # 에러 메시지
@@ -55,15 +53,11 @@ def run(user_file_path, language = "python", image_name = "buildtest", mem_limit
         stdout = container.logs(stdout=True, stderr=False) # 컨테이너 log 확인
         result['stdout'] = stdout
 
-        print("container stdout")
-        print(stdout)
     elif stat_code == 1:
         result['state'] = 'compile error'
         stderr = container.logs(stdout=False, stderr=True) # 컨테이너 log 확인
         result['stderr'] = stderr
 
-        print("container stderr")
-        print(stderr)
     # elif D['state'] == 'tle':
     #     result['state'] = 'tle'
     #     result['stdout'] = ''
