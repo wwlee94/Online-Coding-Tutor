@@ -29,6 +29,10 @@ from os import O_NONBLOCK,read
 # 에러 처리
 import errno
 
+'''
+ AWS ELB + AWS ROUTE 53 -> 상태 검사를 해주는 로드밸런서와 DNS를 관리해주는 ROUTE 53을 EC2에 연결!
+'''
+
 # 유저 세션 번호
 user_no = 0
 p = re.compile(".py[(]\d+[)]") #pdb current line 번호를 알기 위함
