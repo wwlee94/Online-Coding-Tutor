@@ -246,8 +246,11 @@ def debug_request(message):
 
     # 임시 보안 -> docker 실행환경으로 리팩토링 해야함
     # reg = re.compile("^import.*$") # 모두 방지
-    reg = re.compile("^import\s(os|sys|subprocess)$") # os,sys 방지
-    if reg:
+    reg = re.compile("import\s(os|sys|subprocess)\n") # os,sys 방지 정규식
+    result = reg.search(string) # 코드와 매치
+    print("result")
+    print(result)
+    if result:
         emit("debug_response", {'fail': "Debugging 기능은 os, sys, subprocess 시스템 모듈을 지원하지 않습니다."})
         return False
 
@@ -273,6 +276,8 @@ def debug_request(message):
 
     if out != "":
         out = python_version(python_v) + out #sys.version -> python version
+        dir = os.getcwd()
+        out = out.replace(dir,'')
         print (out)
         emit("debug_response", {'success': out, 'linenum':linenum })
     if err != "":
@@ -350,7 +355,9 @@ def debug_input_request(message):
             linenum = '-1'
             # 종료 alert 설정 on
             finish_state = 0
-
+        # 보안상 풀 디렉토리 경로 감추기
+        dir = os.getcwd()
+        result_out = result_out.replace(dir,'')
         emit("debug_input_response", {'data': result_out, 'linenum' : linenum ,
                                       'finish' : finish_state})
     if result_err != "":
@@ -365,6 +372,9 @@ def debug_input_request(message):
             result_out, result_err = fd_popen.communicate() #단계 종료
             version = python_version(python_v)
             result_out = version + 'Debugging Exit ! program will be restarted.\n' + result_out
+            # 보안상 풀 디렉토리 경로 감추기
+            dir = os.getcwd()
+            result_out = result_out.replace(dir,'')
             emit("debug_input_response", {'data': result_out, "finish" : finish_state })
         else:
             result_err = result_err + "Press any key!!"

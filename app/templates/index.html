@@ -488,7 +488,7 @@
 
         // 트리거 파마리터 추가
         (function($) {
-          $.each(['show', 'hide'], function(i, ev) {
+          $.each(['fadeIn', 'hide'], function(i, ev) {
             var el = $.fn[ev];
             $.fn[ev] = function() {
               this.trigger(ev);
@@ -499,11 +499,10 @@
 
         // show, hide 트리거 이벤트
         $('#example_view').on('fadeIn', function() {
-          console.log("trigger event!!!!!!!!")
           $('#example_view').attr('toggle', '1')
         });
 
-        $('#example_view').on('fadeOut', function() {
+        $('#example_view').on('hide', function() {
           $('#example_view').attr('toggle', '0')
         });
 
