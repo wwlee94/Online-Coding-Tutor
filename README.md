@@ -15,6 +15,9 @@
 ## 서비스 구성도
 ![screenshot_2](./app/static/OCT_system_info.png)
 
+## 실행 화면
+![screenshot_3](./app/static/OCT_view.png)
+
 ## 구현 사항
 
 #### 서버 ( Backend )
