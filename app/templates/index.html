@@ -1357,14 +1357,31 @@
             //stack_locals의 크기 만큼 dict를 생성하니 group_key 저장해둠
             stack_group_key.push(dict["key"]);
           }
+
           // 생성순서 거꾸로 먼저 추가해줌 -> 최근것이 올라오도록
           for (var i = tempStackNode.length - 1; i >= 0; i--) nodeDataArray.push(tempStackNode[i]);
 
+          empty_stack = [] // 비어있는 스택들 함수 이름 저장
           //stack 생성 순서대로 검사 ######################그림 그린 변수는 다음 함수처리 속도 향상을 위해 지우는 방안?
           for (var i = 0; i < stack_order.length; i++) {
             // 여러가지 스택 함수들 검사
             for (var j = 0; j < stack_locals.length; j++) {
               stack_variable = stack_locals[j];
+              if (Object.keys(stack_variable[1]).length ===0){
+                // 한번만 empty 출력
+                if(!empty_stack.includes(stack_variable[0])) {
+                  emptyObject = {}
+                  emptyObject["key"] = "empty_" + stack_variable[0];
+                  emptyObject["text"] = "Stack";
+                  emptyObject["color"] = "transparent";
+                  emptyObject["stroke"] = "transparent";
+                  emptyObject["group"] = "" + stack_group_key[j];
+                  nodeDataArray.push(emptyObject)
+
+                  empty_stack.push(stack_variable[0])
+                }
+              }
+              else{
               //stack_variable[0] -> 함수 이름 / stack_variable[1] -> 스택 변수들
               // 각각의 함수들 중 stack_order(stack 변수 생성 순서)값을 포함하고 있다면 추가
               if (stack_variable[1].hasOwnProperty(stack_order[i])) {
@@ -1417,6 +1434,7 @@
                   } //if
                 } //else
               } //hasOwnProperty
+            }
             } //stack_locals
           }
 
