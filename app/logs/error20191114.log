@@ -1,0 +1,125 @@
+nohup: ignoring input and appending output to 'nohup.out'
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 155-510-357
+49.175.7.179 - - [2019-11-14 23:00:59] "GET / HTTP/1.1" 200 78742 0.049772
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/stairsloader.css HTTP/1.1" 304 218 0.008363
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/bluespinnerloader.css HTTP/1.1" 304 217 0.001126
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/loading.css HTTP/1.1" 304 221 0.001322
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/codemirror.css HTTP/1.1" 304 219 0.001099
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/loading-btn.css HTTP/1.1" 304 218 0.001093
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/darcula.css HTTP/1.1" 304 219 0.001058
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/simplescrollbars.css HTTP/1.1" 304 219 0.001276
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/css/show-hint.css HTTP/1.1" 304 218 0.001056
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/customCodemirror.js?ver=2 HTTP/1.1" 304 219 0.001183
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/active-line.js HTTP/1.1" 304 219 0.001027
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/python.js HTTP/1.1" 304 220 0.001061
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/codemirror.js HTTP/1.1" 304 221 0.001053
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/show-hint.js HTTP/1.1" 304 220 0.001080
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/simplescrollbars.js HTTP/1.1" 304 219 0.001011
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/python-hint.js HTTP/1.1" 304 219 0.001123
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/comment.js HTTP/1.1" 304 219 0.001057
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/sublime.js HTTP/1.1" 304 220 0.001047
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/go_init.js?ver=2 HTTP/1.1" 304 219 0.001463
+49.175.7.179 - - [2019-11-14 23:00:59] "GET /static/js/go.js HTTP/1.1" 304 221 0.001290
+49.175.7.179 - - [2019-11-14 23:01:00] "GET /socket.io/?EIO=3&transport=polling&t=MvgDw5h HTTP/1.1" 200 389 0.001385
+49.175.7.179 - - [2019-11-14 23:01:03] "POST /example HTTP/1.1" 200 401 0.003065
+49.175.7.179 - - [2019-11-14 23:01:06] "POST /socket.io/?EIO=3&transport=polling&t=MvgDx6R&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 2.557016
+49.175.7.179 - - [2019-11-14 23:01:06] "GET /socket.io/?EIO=3&transport=polling&t=MvgDw6i&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 584 6.633646
+49.175.7.179 - - [2019-11-14 23:01:25] "POST /socket.io/?EIO=3&transport=polling&t=MvgE0DK&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000310
+49.175.7.179 - - [2019-11-14 23:01:25] "GET /socket.io/?EIO=3&transport=polling&t=MvgDxle&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 18.288610
+49.175.7.179 - - [2019-11-14 23:01:50] "POST /socket.io/?EIO=3&transport=polling&t=MvgE6L2&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000316
+49.175.7.179 - - [2019-11-14 23:01:50] "GET /socket.io/?EIO=3&transport=polling&t=MvgE0EP&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.000333
+49.175.7.179 - - [2019-11-14 23:02:15] "POST /socket.io/?EIO=3&transport=polling&t=MvgECSf&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000303
+49.175.7.179 - - [2019-11-14 23:02:15] "GET /socket.io/?EIO=3&transport=polling&t=MvgE6L_&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.001082
+49.175.7.179 - - [2019-11-14 23:02:40] "POST /socket.io/?EIO=3&transport=polling&t=MvgEIaF&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000324
+49.175.7.179 - - [2019-11-14 23:02:40] "GET /socket.io/?EIO=3&transport=polling&t=MvgECTd&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.001780
+49.175.7.179 - - [2019-11-14 23:03:05] "POST /socket.io/?EIO=3&transport=polling&t=MvgEOhr&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000296
+49.175.7.179 - - [2019-11-14 23:03:05] "GET /socket.io/?EIO=3&transport=polling&t=MvgEIbC&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.002389
+49.175.7.179 - - [2019-11-14 23:03:30] "POST /socket.io/?EIO=3&transport=polling&t=MvgEUpR&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000358
+49.175.7.179 - - [2019-11-14 23:03:30] "GET /socket.io/?EIO=3&transport=polling&t=MvgEOio&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.005957
+49.175.7.179 - - [2019-11-14 23:03:55] "POST /socket.io/?EIO=3&transport=polling&t=MvgEaxc&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000311
+49.175.7.179 - - [2019-11-14 23:03:55] "GET /socket.io/?EIO=3&transport=polling&t=MvgEUqy&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 24.997683
+49.175.7.179 - - [2019-11-14 23:04:20] "POST /socket.io/?EIO=3&transport=polling&t=MvgEh3B&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000313
+49.175.7.179 - - [2019-11-14 23:04:20] "GET /socket.io/?EIO=3&transport=polling&t=MvgEayY&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.004531
+49.175.7.179 - - [2019-11-14 23:04:45] "POST /socket.io/?EIO=3&transport=polling&t=MvgEnC0&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000293
+49.175.7.179 - - [2019-11-14 23:04:45] "GET /socket.io/?EIO=3&transport=polling&t=MvgEh5O&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.002606
+49.175.7.179 - - [2019-11-14 23:05:10] "POST /socket.io/?EIO=3&transport=polling&t=MvgEtJZ&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000322
+49.175.7.179 - - [2019-11-14 23:05:10] "GET /socket.io/?EIO=3&transport=polling&t=MvgEnCx&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.002179
+49.175.7.179 - - [2019-11-14 23:05:35] "POST /socket.io/?EIO=3&transport=polling&t=MvgEzRC&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000304
+49.175.7.179 - - [2019-11-14 23:05:35] "GET /socket.io/?EIO=3&transport=polling&t=MvgEtKZ&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 24.999699
+49.175.7.179 - - [2019-11-14 23:06:01] "POST /socket.io/?EIO=3&transport=polling&t=MvgF3Yk&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000295
+49.175.7.179 - - [2019-11-14 23:06:01] "GET /socket.io/?EIO=3&transport=polling&t=MvgEzS4&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.009555
+49.175.7.179 - - [2019-11-14 23:06:26] "POST /socket.io/?EIO=3&transport=polling&t=MvgF9gP&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 198 0.000342
+49.175.7.179 - - [2019-11-14 23:06:26] "GET /socket.io/?EIO=3&transport=polling&t=MvgF3Zm&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 200 191 25.005460
+ * Detected change in '/home/ubuntu/sv_flask/app/server.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 155-510-357
+49.175.7.179 - - [2019-11-14 23:06:48] "GET /socket.io/?EIO=3&transport=polling&t=MvgF9hN&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 400 194 0.000660
+49.175.7.179 - - [2019-11-14 23:06:48] "POST /socket.io/?EIO=3&transport=polling&t=MvgFF4s&sid=a3012c4243c74305875a58ded3dd8ab8 HTTP/1.1" 400 217 0.000205
+49.175.7.179 - - [2019-11-14 23:06:49] "GET /socket.io/?EIO=3&transport=polling&t=MvgFFP3 HTTP/1.1" 200 389 0.001448
+ * Detected change in '/home/ubuntu/sv_flask/app/server.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 155-510-357
+49.175.7.179 - - [2019-11-14 23:06:56] "GET /socket.io/?EIO=3&transport=polling&t=MvgFFQ3&sid=0a08c54ac82d48df9e100ddb8ba01983 HTTP/1.1" 400 194 0.000332
+49.175.7.179 - - [2019-11-14 23:06:56] "POST /socket.io/?EIO=3&transport=polling&t=MvgFH8m&sid=0a08c54ac82d48df9e100ddb8ba01983 HTTP/1.1" 400 217 0.000218
+49.175.7.179 - - [2019-11-14 23:06:57] "GET /socket.io/?EIO=3&transport=polling&t=MvgFHMW HTTP/1.1" 200 389 0.001551
+49.175.7.179 - - [2019-11-14 23:07:22] "POST /socket.io/?EIO=3&transport=polling&t=MvgFNU4&sid=e693ab2c5ee947d5a20543b0c9a876b8 HTTP/1.1" 200 198 0.000302
+49.175.7.179 - - [2019-11-14 23:07:22] "GET /socket.io/?EIO=3&transport=polling&t=MvgFHNS&sid=e693ab2c5ee947d5a20543b0c9a876b8 HTTP/1.1" 200 191 25.008558
+ * Detected change in '/home/ubuntu/sv_flask/app/server.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 155-510-357
+49.175.7.179 - - [2019-11-14 23:07:47] "GET /socket.io/?EIO=3&transport=polling&t=MvgFNV7&sid=e693ab2c5ee947d5a20543b0c9a876b8 HTTP/1.1" 400 194 0.000309
+49.175.7.179 - - [2019-11-14 23:07:47] "POST /socket.io/?EIO=3&transport=polling&t=MvgFTXI&sid=e693ab2c5ee947d5a20543b0c9a876b8 HTTP/1.1" 400 217 0.000184
+49.175.7.179 - - [2019-11-14 23:07:48] "GET /socket.io/?EIO=3&transport=polling&t=MvgFTgi HTTP/1.1" 200 389 0.001599
+49.175.7.179 - - [2019-11-14 23:07:52] "GET / HTTP/1.1" 200 78742 0.032471
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/stairsloader.css HTTP/1.1" 304 218 0.003128
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/bluespinnerloader.css HTTP/1.1" 304 217 0.001157
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/loading-btn.css HTTP/1.1" 304 218 0.001153
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/codemirror.css HTTP/1.1" 304 219 0.001020
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/darcula.css HTTP/1.1" 304 219 0.001017
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/loading.css HTTP/1.1" 304 221 0.001036
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/simplescrollbars.css HTTP/1.1" 304 219 0.001049
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/css/show-hint.css HTTP/1.1" 304 218 0.001084
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/codemirror.js HTTP/1.1" 304 221 0.001097
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/python.js HTTP/1.1" 304 220 0.000931
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/customCodemirror.js?ver=2 HTTP/1.1" 304 219 0.001108
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/active-line.js HTTP/1.1" 304 219 0.001105
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/simplescrollbars.js HTTP/1.1" 304 219 0.001050
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/show-hint.js HTTP/1.1" 304 220 0.001089
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/python-hint.js HTTP/1.1" 304 219 0.001105
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/comment.js HTTP/1.1" 304 219 0.001103
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/go.js HTTP/1.1" 304 221 0.001052
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/sublime.js HTTP/1.1" 304 220 0.001099
+49.175.7.179 - - [2019-11-14 23:07:52] "GET /static/js/go_init.js?ver=2 HTTP/1.1" 304 219 0.000989
+49.175.7.179 - - [2019-11-14 23:08:13] "POST /socket.io/?EIO=3&transport=polling&t=MvgFZzA&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 198 0.000316
+49.175.7.179 - - [2019-11-14 23:08:13] "GET /socket.io/?EIO=3&transport=polling&t=MvgFThn&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 191 25.699078
+49.175.7.179 - - [2019-11-14 23:08:39] "POST /socket.io/?EIO=3&transport=polling&t=MvgFgJJ&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 198 0.000312
+49.175.7.179 - - [2019-11-14 23:08:39] "GET /socket.io/?EIO=3&transport=polling&t=MvgFZ-J&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 191 25.928044
+49.175.7.179 - - [2019-11-14 23:09:05] "POST /socket.io/?EIO=3&transport=polling&t=MvgFmff&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 198 0.000331
+49.175.7.179 - - [2019-11-14 23:09:05] "GET /socket.io/?EIO=3&transport=polling&t=MvgFgKR&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 191 25.933052
+49.175.7.179 - - [2019-11-14 23:09:31] "POST /socket.io/?EIO=3&transport=polling&t=MvgFs__&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 198 0.000320
+49.175.7.179 - - [2019-11-14 23:09:31] "GET /socket.io/?EIO=3&transport=polling&t=MvgFmgm&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 200 191 25.936996
+ * Detected change in '/home/ubuntu/sv_flask/app/server.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 155-510-357
+49.175.7.179 - - [2019-11-14 23:09:37] "GET /socket.io/?EIO=3&transport=polling&t=MvgFt1T&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 400 194 0.000605
+49.175.7.179 - - [2019-11-14 23:09:37] "POST /socket.io/?EIO=3&transport=polling&t=MvgFuTZ&sid=4c77581275b640ff902ecb8934b8183e HTTP/1.1" 400 217 0.000235
+ * Detected change in '/home/ubuntu/sv_flask/app/server.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 155-510-357
+49.175.7.179 - - [2019-11-14 23:09:39] "GET /socket.io/?EIO=3&transport=polling&t=MvgFuyp HTTP/1.1" 200 389 0.001861
+49.175.7.179 - - [2019-11-14 23:10:05] "POST /socket.io/?EIO=3&transport=polling&t=MvgF_J3&sid=5e0a97065f9948ecaab7ffeac4f54dbc HTTP/1.1" 200 198 0.000323
+49.175.7.179 - - [2019-11-14 23:10:05] "GET /socket.io/?EIO=3&transport=polling&t=MvgFuzw&sid=5e0a97065f9948ecaab7ffeac4f54dbc HTTP/1.1" 200 191 25.939403
+ * Detected change in '/home/ubuntu/sv_flask/app/server.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 155-510-357
+49.175.7.179 - - [2019-11-14 23:10:20] "GET /socket.io/?EIO=3&transport=polling&t=MvgF_K6&sid=5e0a97065f9948ecaab7ffeac4f54dbc HTTP/1.1" 400 194 0.000326
+49.175.7.179 - - [2019-11-14 23:10:20] "POST /socket.io/?EIO=3&transport=polling&t=MvgG2zU&sid=5e0a97065f9948ecaab7ffeac4f54dbc HTTP/1.1" 400 217 0.000248
+49.175.7.179 - - [2019-11-14 23:10:22] "GET /socket.io/?EIO=3&transport=polling&t=MvgG3Su HTTP/1.1" 200 389 0.001586

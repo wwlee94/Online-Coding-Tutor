@@ -9,6 +9,8 @@ import re
 from flask import Flask , render_template, session , request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
 import datetime
+from base64 import b64encode
+
 app = Flask(__name__)
 app.secret_key = "secret"
 # app.config.update(
@@ -51,17 +53,26 @@ def execute_return_json(filepath):
     return output_json
 
 #서버 초기 설정
-@app.before_request
-def before_request():
-    global user_no #user_no를 전역변수로 선언
-# 	app.permanent_session_lifetime = timedelta(minutes=5) #세션 기간 5분으로 설정
-    if 'session' in session and 'user-id' in session:
-        pass
-    else:
-        session['session'] = os.urandom(24)
-        session['username'] = 'user_'+str(user_no)
-        session['debug_str'] = []
-        user_no += 1
+# @app.before_first_request
+# def before_first_request():
+#     global user_no #user_no를 전역변수로 선언
+#     print("session")
+#     print(session)
+# # 	app.permanent_session_lifetime = timedelta(minutes=5) #세션 기간 5분으로 설정
+#     if 'session' in session:
+#         pass
+#     else:
+#         random_bytes = os.urandom(24)
+#         token = b64encode(random_bytes).decode('utf-8')
+#         session['session'] = token
+#         session['username'] = 'user_'+str(user_no)
+#         session['debug_str'] = []
+#
+#         print("세션 저장 완료 !!")
+#         print(session['session'])
+#         print(session['username'])
+#         user_no += 1
+
 #redirect로 온 데이터 보여줘야함..
 @app.route('/',methods=['GET', 'POST'])
 def index():
@@ -79,10 +90,9 @@ def index():
 def example():
     # bno = request.args.get('bno')
     # content = request.args.get('content')
+    print("Example\n")
     bno = request.form['bno']
     content = request.form['content']
-    print(bno)
-    print(content)
     dict = {}
     dict['content'] = content
     return jsonify(dict)
@@ -96,16 +106,35 @@ def connect():
     emit("after connect", {'data': 'Connected'})
     print("Connect !!")
 
+    global user_no #user_no를 전역변수로 선언
+    print("session")
+    print(session)
+# 	app.permanent_session_lifetime = timedelta(minutes=5) #세션 기간 5분으로 설정
+    if 'session' in session:
+        pass
+    else:
+        random_bytes = os.urandom(24)
+        token = b64encode(random_bytes).decode('utf-8')
+        session['session'] = token
+        session['username'] = 'user_'+str(++user_no)
+        session['debug_str'] = []
+
+        print("세션 저장 완료 !!")
+        print(session['session'])
+        print(session['username'])
+
 #사용자가 브라우저를 종료하면 시간 지나서 disconnect -> 세션도 비움 -> 해당 세션id의 파일도 삭제
 @socketio.on('disconnect')
 def disconnect():
-    filepath = os.path.join("/home/ubuntu/sv_flask/app/userfile",session['username']+'.py')
-    if os.path.isfile(filepath):
-        os.remove(filepath)
-
-    print (session['username']+" Session Clear !!")
-    session.clear()
     print ("Disconnected !!")
+    print(session)
+    if 'session' in session:
+        filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/', session['username'] + '.py')
+        if os.path.isfile(filepath):
+            os.remove(filepath)
+
+        print (session['username'] + " Session Clear !!")
+        session.clear()
 
 #stop 버튼 클릭시
 @socketio.on('stop_request')
@@ -117,11 +146,12 @@ def stop(message):
 #viz_request -> visualize 버튼 클릭시 요청 -> 내부 정보를 json으로 반환
 @socketio.on('viz_request')
 def vizualize_request(message):
+    print ("viz_request!!")
     string = message['data'] #unicode로 받아짐..!!!! 중요!!
     string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
     python_v = check_version(message['version'])
+    print ("viz_request : python compile !!\n")
     print (string)
-    print ("viz_request : python compile !!")
     try:
         if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
             os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
@@ -129,7 +159,9 @@ def vizualize_request(message):
         if e.errno != errno.EEXIST:
             print("Failed to create Directory!!")
             raise
-    filepath = os.path.join("/home/ubuntu/sv_flask/app/userfile",session['username']+'.py')
+
+    filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/',session['username'] + '.py')
+
     fid = open(filepath,"w")
     if os.path.isfile(filepath):
         fid.write(string)
@@ -138,7 +170,7 @@ def vizualize_request(message):
     path = './' + session['username'] + '.py'
     res = docker_container.run(python_v, path)
     if res['state'] == 'success':
-        viz_path = '/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py'
+        viz_path = '/home/ubuntu/sv_flask/app/userfile/'+ session['username'] +'.py'
         viz_data = execute_return_json(viz_path)
         print (viz_data)
         emit("viz_response", {'data': viz_data})
@@ -169,7 +201,7 @@ def run_request(message):
     string = message['data'] #unicode로 받아짐..!!!! 중요!!
     string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
     python_v = check_version(message['version'])
-    print ("run_request : python compile !!")
+    print ("run_request : python compile !!\n")
     try:
         if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
             os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
@@ -177,7 +209,9 @@ def run_request(message):
         if e.errno != errno.EEXIST:
             print("Failed to create Directory!!")
             raise
-    filepath = os.path.join("/home/ubuntu/sv_flask/app/userfile",session['username']+'.py')
+    filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/',session['username'] + '.py')
+    print(filepath)
+
     fid = open(filepath,"w")
     if os.path.isfile(filepath):
         fid.write(string)
@@ -242,7 +276,7 @@ def debug_request(message):
         if e.errno != errno.EEXIST:
             print("Failed to create Directory!!")
             raise
-    filepath = os.path.join("/home/ubuntu/sv_flask/app/userfile",session['username']+'.py')
+    filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/',session['username']+'.py')
     fid = open(filepath,"w")
     if os.path.isfile(filepath):
         fid.write(string)
