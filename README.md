@@ -25,7 +25,7 @@
 2. Python Bdb 디버깅 툴을 이용하여 변수타입, 변수명, 함수 등등을 가져와 데이터 파싱
 3. Docker 가상환경을 이용하여 코드를 실행 - SandBoxing 구현
 4. AWS EC2 인스턴스에 서버를 배포
-5. AWS ELB (로드밸런서) + AWS ROUTE 53을 사용하여 Scale-UP 효과와 DNS 관리 기능 구현
+5. AWS ELB (로드밸런서) + AWS ROUTE 53을 사용하여 Scale-Out 효과와 DNS 관리 기능 구현
 
 #### 클라이언트 ( Client )
 1. GoJS 라이브러리와 서버에서 파싱한 데이터를 받아 코드 시각화 구현
