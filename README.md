@@ -41,6 +41,15 @@
 
 ## Reference
 
+### 실행 방법
+
+- `Docker` 설치
+- `./docker/Dockerfile`을 가지고 `oct-container` 라는 이미지 생성
+  - COMMAND : `docker build --tag oct-container .` 
+- `docker-py` 모듈 설치
+- `eventlet` 모듈 설치
+- `python2 ./server.py` 실행
+
 ### Visualize
 1. Python 2.7 버전 기반으로 코드 시각화
 2. 노드 클릭시 해당 노드가 Pointing 하는 모든 노드들을 하이라이트 해주는 기능

@@ -15,7 +15,7 @@ import docker # Docker SDK for Python
 '''
 
 # docker container 실행
-def run(language, user_file_path, image_name = "buildtest", mem_limit = "64m", cpu_shares = "1024"):
+def run(language, user_file_path, image_name = "oct-container", mem_limit = "200m", cpu_shares = 1024):
 
     # # 파라미터 가져오기
     # user_file_path = sys.argv[1]
@@ -23,22 +23,24 @@ def run(language, user_file_path, image_name = "buildtest", mem_limit = "64m", c
     print("language = '" + language +"'")
     print("user_file_path = '" + user_file_path +"'")
     print("mem_limit = '" + mem_limit +"'")
-    print("cpu_shares = '" + cpu_shares +"'")
+    print("cpu_shares = " + str(cpu_shares))
 
     client = docker.from_env()
 
     # 컨테이너 실행
     # 설정한 메모리 이상으로 메모리를 사용하면 컨테이너는 자동적으로 종료
+    app_path = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+    print(app_path)
     cmd = language + " " + user_file_path
     container = client.containers.run(image=image_name, command = cmd, detach = True,
-                            volumes= {'/home/ubuntu/sv_flask/app/userfile/':{'bind': '/usr/src/app', 'mode': 'ro'}},
-                            mem_limit = "64m", cpu_shares = 1024)
+                            volumes= {app_path + '/userfile/':{'bind': '/usr/src/app', 'mode': 'ro'}},
+                            mem_limit = mem_limit, cpu_shares = cpu_shares)
     id = container.short_id
     print("Container ID : " + id)
 
-    # 컨테이너 생성 후 stop
-    print("kill Container")
-    container.kill()
+    # # 컨테이너 생성 후 stop
+    # print("kill Container")
+    # container.kill()
 
     print("stop Container")
     container.stop(timeout = 5)
@@ -46,6 +48,8 @@ def run(language, user_file_path, image_name = "buildtest", mem_limit = "64m", c
 
     stat_code = exit_code['StatusCode'] # 에러 코드
     exc_msg = exit_code['Error'] # 에러 메시지
+
+    if exc_msg: print(exc_msg)
 
     result = {}
     if stat_code == 0:

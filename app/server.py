@@ -2,7 +2,6 @@
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
-sys.path.append('/home/ubuntu/sv_flask/app/docker') # 모듈 경로 추가
 
 import os
 import re
@@ -10,6 +9,10 @@ from flask import Flask , render_template, session , request, redirect, url_for,
 from flask_socketio import SocketIO, emit
 import datetime
 from base64 import b64encode
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/app/docker"))
+
+app_path = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/app")
 
 app = Flask(__name__)
 app.secret_key = "secret"
@@ -129,7 +132,7 @@ def disconnect():
     print ("Disconnected !!")
     print(session)
     if 'session' in session:
-        filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/', session['username'] + '.py')
+        filepath = os.path.join(app_path + '/userfile/', session['username'] + '.py')
         if os.path.isfile(filepath):
             os.remove(filepath)
 
@@ -148,19 +151,19 @@ def stop(message):
 def vizualize_request(message):
     print ("viz_request!!")
     string = message['data'] #unicode로 받아짐..!!!! 중요!!
-    string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
+    # string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
     python_v = check_version(message['version'])
     print ("viz_request : python compile !!\n")
     print (string)
     try:
-        if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
-            os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
+        if not (os.path.isdir(app_path + '/userfile')):
+            os.makedirs(os.path.join(app_path + '/userfile'))
     except OSError as e:
         if e.errno != errno.EEXIST:
             print("Failed to create Directory!!")
             raise
 
-    filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/',session['username'] + '.py')
+    filepath = os.path.join(app_path + '/userfile/',session['username'] + '.py')
 
     fid = open(filepath,"w")
     if os.path.isfile(filepath):
@@ -170,7 +173,7 @@ def vizualize_request(message):
     path = './' + session['username'] + '.py'
     res = docker_container.run(python_v, path)
     if res['state'] == 'success':
-        viz_path = '/home/ubuntu/sv_flask/app/userfile/'+ session['username'] +'.py'
+        viz_path = app_path + '/userfile/'+ session['username'] +'.py'
         viz_data = execute_return_json(viz_path)
         print (viz_data)
         emit("viz_response", {'data': viz_data})
@@ -199,17 +202,17 @@ def vizualize_request(message):
 @socketio.on('run_request')
 def run_request(message):
     string = message['data'] #unicode로 받아짐..!!!! 중요!!
-    string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
+    # string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
     python_v = check_version(message['version'])
     print ("run_request : python compile !!\n")
     try:
-        if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
-            os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
+        if not (os.path.isdir(app_path + '/userfile')):
+            os.makedirs(os.path.join(app_path + '/userfile'))
     except OSError as e:
         if e.errno != errno.EEXIST:
             print("Failed to create Directory!!")
             raise
-    filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/',session['username'] + '.py')
+    filepath = os.path.join(app_path + '/userfile/',session['username'] + '.py')
     print(filepath)
 
     fid = open(filepath,"w")
@@ -264,19 +267,19 @@ def run_request(message):
 @socketio.on('debug_request')
 def debug_request(message):
     string = message['data'] #unicode로 받아짐..!!!! 중요!!
-    string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
+    # string = string.encode('latin-1').decode('utf-8') #라틴에서 utf-8로..
     session['debug_str']=[]
     python_v = check_version(message['version'])
     print (string)
     print ("debug_request : python debug !!")
     try:
-        if not (os.path.isdir('/home/ubuntu/sv_flask/app/userfile')):
-            os.makedirs(os.path.join('/home/ubuntu/sv_flask/app/userfile'))
+        if not (os.path.isdir(app_path + '/userfile')):
+            os.makedirs(os.path.join(app_path + '/userfile'))
     except OSError as e:
         if e.errno != errno.EEXIST:
             print("Failed to create Directory!!")
             raise
-    filepath = os.path.join('/home/ubuntu/sv_flask/app/userfile/',session['username']+'.py')
+    filepath = os.path.join(app_path + '/userfile/',session['username']+'.py')
     fid = open(filepath,"w")
     if os.path.isfile(filepath):
         fid.write(string)
@@ -292,7 +295,7 @@ def debug_request(message):
         emit("debug_response", {'fail': "Debugging 기능은 os, sys, subprocess 시스템 모듈을 지원하지 않습니다."})
         return False
 
-    cmd = [python_v,'-m','pdb','/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
+    cmd = [python_v,'-m','pdb',app_path + '/userfile/'+session['username']+'.py']
     fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
     #fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).stdout
     #data = fd_popen.read().strip()
@@ -337,7 +340,7 @@ def debug_input_request(message):
     #     if i == 'debug_str':  #session['debug_str'] 인 것만 빼냄
     #         print "i :", session[i]
 
-    cmd = [python_v,'-m','pdb','/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
+    cmd = [python_v,'-m','pdb', app_path + '/userfile/'+session['username']+'.py']
     fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
 # 비동기로 설정하는 법?
 # # set the O_NONBLOCK flag of p.stdout file descriptor:
@@ -405,7 +408,7 @@ def debug_input_request(message):
             session_clear = False
             linenum = '-1'
             finish_state = 0
-            cmd = [python_v,'-m','pdb','/home/ubuntu/sv_flask/app/userfile/'+session['username']+'.py']
+            cmd = [python_v,'-m','pdb', app_path + '/userfile/'+session['username']+'.py']
             fd_popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
             result_out, result_err = fd_popen.communicate() #단계 종료
             version = python_version(python_v)
@@ -420,7 +423,7 @@ def debug_input_request(message):
 #check_version으로 python,python3 인지 체크후 대입
 #popen으로 version 출력값 구함
 def python_version(version):
-    fd_popen = subprocess.Popen([version,'/home/ubuntu/sv_flask/app/version.py'],stdout=subprocess.PIPE)
+    fd_popen = subprocess.Popen([version, app_path + '/version.py'],stdout=subprocess.PIPE)
     out = fd_popen.communicate()[0]
     return out
 def check_version(str):
@@ -457,7 +460,7 @@ def check_pdb_finished(str):
 # 예제 파일 가져오기
 def get_example_file():
     file_info = []
-    path=os.path.join("/home/ubuntu/sv_flask/app/example/python/")
+    path=os.path.join(app_path + "/example/python/")
     file_list = os.listdir(path)
 # 	file_list_py = [file for file in file_list if file.endswith('.py')]
     file_list_py = []
