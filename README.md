@@ -12,9 +12,6 @@
 2. 나의 코드가 어떻게 순차적으로 실행되는지 궁금해하는 사용자
 3. Python 개발 환경을 따로 설치할 필요없이 웹 브라우저에서 코드를 실행 시키고 싶은 사용자
 
-## 서비스 구성도
-![screenshot_2](./app/static/OCT_system_info.png)
-
 ## 실행 화면
 ![screenshot_3](./app/static/OCT_view.png)
 
